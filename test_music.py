@@ -2,9 +2,12 @@ import subprocess
 import os
 
 g_rate = 60000 
-def play_waveform(form):
-    s = '%s | play -n synth 1 sine' %form
-    #s = 'echo %s | sox -r 60000 -b 8 -c 1 -t raw -s - -d' % form
+def play_tune(*notes):
+    return 
+
+def play_waveform(form,length):
+    s = 'play -n synth %s sine %s' % (length, form)
+    #s = 'echo %s | sox -r 60000 -b 8 -c 1 -t raw -s - -d' %form
     #print s
     os.system(s)
  
@@ -16,6 +19,10 @@ def make_note(rate, half_steps_above_400, length=1):
     cycles = int(rate / (400 * 2**(float(half_steps_above_400)/12)))
     cycle = cycles/2 * 'a' + cycles/2 * 'r'
     return int(rate / len(cycle) * length) * cycle
+
+def make_note_simpler(half_steps_above_440, length=1):
+    freq = 440*2**(float(half_steps_above_440)/12)
+    return freq,length
  
  
 class Note(object):
@@ -29,7 +36,8 @@ def play(*notes):
  
 if __name__ == '__main__':
     #play_waveform(make_note(g_rate, 0, .5) + make_note(g_rate, 0, .5) +  make_note(g_rate, 1, .5) + make_note(g_rate, 3, .5))
-    play_waveform(490)
+    
+    play_waveform(900,2) + play_waveform(400,1)
 
     #for i in range(-2,4):
     #    play_waveform(make_note(g_rate,i,.5))
