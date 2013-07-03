@@ -4,7 +4,6 @@ import os
 
 #g_rate = 60000 
 class Note(object):
-    tempo = 200
     note_dict = {'a':0,'b':2,'c':3,'d':5,'e':7,'f':8,'g':10}
     for note in note_dict.keys():
         note_dict[note + '#'] = note_dict[note] + 1
@@ -34,32 +33,23 @@ class Tune(object):
     def __init__(self,notes):
         self.notes = notes
     def play(self):
-        result = notes[0].play_note()
+        result = self.notes[0].play_note()
         for i in range(1,len(self.notes)):
-            result += notes[i].play_note()
+            result += self.notes[i].play_note()
         return result
 
-ode_firstphrase = Tune([Note(('f',-2),1/2.0),Note(('a',0),1/4.0),Note(('bb',0),1/4.0),Note(('a',0),1/4.0)])
-note1 = Note(('b#',0),2.0)
+ode_firstphrase = Tune([Note(('f',-2),1/2.0),Note(('a',0),1/4.0),Note(('a',0),1/4.0),
+                Note(('bb',0),1/4.0), Note(('c',0),1/4.0),Note(('c',0),1/4.0),
+                Note(('bb',0),1/4.0),Note(('a',0),1/4.0),Note(('g',-1),1/4.0),
+                Note(('f',-1),1/4.0),Note(('f',-1),1/4.0),Note(('g',-1),1/4.0),
+                Note(('a',0),1/4.0),Note(('a',0),1/4.0+1/8.0),Note(('g',-1),1/8.0),Note(('g',-1),1/2.0)])
 
 
 
-def play_tune(half_steps_above_440_and_length_list):
-    result = play_waveform(make_note_simpler(half_steps_above_440_and_length_list[0]))
-    for i in range(1,len(half_steps_above_440_and_length_list)):
-        result += play_waveform(make_note_simpler(half_steps_above_440_and_length_list[i]))
-    return result
 
 
-
-        
- 
-# def play(*notes):
-#     play_waveform(''.join([n.get_waveform(8000) for n in notes]))
  
 if __name__ == '__main__':
-    tempo = 300
-    note1.play_note()
+    tempo = 200
+    ode_firstphrase.play()
     
-    #for i in range(-2,4):
-    #    play_waveform(make_note(g_rate,i,.5))
