@@ -2,6 +2,11 @@ import subprocess
 import os
 
  
+def play_waveform(form):
+    s = 'echo %s | sox -r 8000 -b 8 -c 1 -t raw -s - -d' % form
+    print s
+    os.system(s)
+ 
 class Note(object):
     '''dictionary will specifiy number of half-steps to increment above or below a-440'''
     note_dict = {'a':0,'b':2,'c':3,'d':5,'e':7,'f':8,'g':10}
@@ -48,7 +53,7 @@ ode_firstphrase = Tune([Note(('f',-2),1/2.0),Note(('a',0),1/4.0),Note(('a',0),1/
                 Note(('a',0),1/4.0),Note(('a',0),1/4.0+1/8.0),Note(('g',-1),1/8.0),Note(('g',-1),1/2.0)])
 
 
-
+# ode_second_phrase = Tune(ode_firstphrase.notes[1:13]Note(('g',-1),1/4.0+1/8.0)
 
  
 if __name__ == '__main__':
