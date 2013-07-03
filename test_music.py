@@ -13,7 +13,7 @@ class Note(object):
     def __init__(self, name, value):
         '''name=pitch class, a tuple of (alphabet letter, octave). octave = 0 is the first octave 
         above a-440. octave < 0 means number of octaves below a-440.
-         value is the note length value 1/4.0 = quarter, etc.'''
+         value is the note length. value of 1/4.0 = quarter, etc.'''
         self.name = name
         self.value = value
 
