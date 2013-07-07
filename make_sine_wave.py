@@ -17,6 +17,8 @@ print note_string
 
 
 
+
+
 # note = 'echo %s | sox -r 50000 -b 8 -c 1 -t raw -s - -d' %note_string
 # # # # # #print s
 # os.system(note)
