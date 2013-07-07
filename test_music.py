@@ -3,9 +3,11 @@ import os
 
  
 def play_waveform(form):
-    s = 'echo %s | sox -r 8000 -b 8 -c 1 -t raw -s - -d' % form
+    s = 'echo %s | sox -r 54000 -b 8 -c 1 -t raw -s - -d' % form
     print s
     os.system(s)
+
+
  
 class Note(object):
     '''dictionary will specifiy number of half-steps to increment above or below a-440'''
