@@ -6,10 +6,10 @@ note_string = []
 
 sample_rate = 50000.0
 freq = 400.0
-for i in range(0,int(sample_rate/freq)+1):
+for i in range(0,int(sample_rate/freq)):
     note_string.append(int(round(255/2.0*math.sin(math.pi*2*i*freq/(sample_rate))+255/2.0)))
 
-
+note_string *= 2
 Y = note_string
 X = range(len(note_string))
 
