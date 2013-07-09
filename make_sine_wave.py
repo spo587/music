@@ -8,24 +8,30 @@ bit = 32
 
 sample_rate = 100000.0
 
+wave_peak = (2**bit - 1)/2.0
+
+
+# class Sine_wave(object):
+#     def __init__(self, freq, duration, time_constant):
+
 def exponential_decay(k,t):
     return math.exp(-k*t)
 
 
 
  
-def build_sine_wave(freq, duration, max_amplitude=(2**bit - 1)/2.0):
+def build_sine_wave(freq, duration, time_constant=0, max_amplitude=wave_peak):
     note_string_ints = []
     for i in range(0,int(duration*freq*sample_rate/freq)):
         offset = (2**bit - 1)/2.0
         phase = math.pi*2*i*freq/sample_rate
-        note_string_ints.append(int(round(max_amplitude*math.sin(phase)+offset)))
+        note_string_ints.append(int(round(max_amplitude*exponential_decay(time_constant,i/sample_rate)*math.sin(phase)+offset)))
     return note_string_ints
 
-def decayed_sine_wave(note_string_ints,k):
-    for i in range(len(note_string_ints)):
-        note_string_ints[i] = note_string_ints[i]*exponential_decay(k,i/sample_rate)
-    return note_string_ints
+# def decayed_sine_wave(note_string_ints,k):
+#     for i in range(len(note_string_ints)):
+#         note_string_ints[i] = note_string_ints[i]*exponential_decay(k,i/sample_rate)
+#     return note_string_ints
 
 
 
@@ -47,11 +53,11 @@ def combine_five_sine_waves(waves):
 
 def make_tone_fundamental_four_overtones(freq,duration,relative_powers=[0.5,0.1,0.1,0.05,0.03]):
     '''relative powers a list of the relative powers of the four overtones'''
-    wave1 = build_sine_wave(freq,duration,relative_powers[0]*(2**bit-1)/2.0)
-    wave2 = build_sine_wave(freq*2,duration,relative_powers[1]*(2**bit - 1)/2.0)
-    wave3 = build_sine_wave(freq*3,duration,relative_powers[2]*(2**bit - 1)/2.0)
-    wave4 = build_sine_wave(freq*4,duration,relative_powers[3]*(2**bit - 1)/2.0)
-    wave5 = build_sine_wave(freq*5,duration,relative_powers[4]*(2**bit - 1)/2.0)
+    wave1 = build_sine_wave(freq,duration,relative_powers[0]*wave_peak)
+    wave2 = build_sine_wave(freq*2,duration,relative_powers[1]*wave_peak)
+    wave3 = build_sine_wave(freq*3,duration,relative_powers[2]*wave_peak)
+    wave4 = build_sine_wave(freq*4,duration,relative_powers[3]*wave_peak)
+    wave5 = build_sine_wave(freq*5,duration,relative_powers[4]*wave_peak)
     waves = [wave1,wave2,wave3,wave4,wave5]
     ints = combine_five_sine_waves(waves)
     bytes = make_bytes_wave(ints)
@@ -59,15 +65,12 @@ def make_tone_fundamental_four_overtones(freq,duration,relative_powers=[0.5,0.1,
 
 
 
-def make_sine_wave_sound(freq,duration):
-    ints = build_sine_wave(freq,duration)
+def make_sine_wave_sound(freq,duration,time_constant=0,max_amplitude=wave_peak):
+    ints = build_sine_wave(freq,duration,time_constant)
     bytes = make_bytes_wave(ints)
     return bytes
 
-def make_decayed_sine_wave_sound(freq,duration,k):
-    ints = decayed_sine_wave(build_sine_wave(freq,duration),k)
-    bytes = make_bytes_wave(ints)
-    return bytes
+
 
 def make_tone_two_sine_waves(freq1,freq2,duration,relative_power=0.1):
     ints = combine_two_sine_waves(build_sine_wave(freq1,duration),build_sine_wave(freq2,duration,relative_power*(2**bit - 1)/2.0))
@@ -98,7 +101,7 @@ if __name__ == '__main__':
     p = subprocess.Popen(['sox', '-r', str(sample_rate), '-b', str(bit) , '-c', '1', '-t', 'raw', '-e', 'unsigned-integer', '-', '-d'], stdin=subprocess.PIPE)
 
     # p.stdin.write(make_tone_fundamental_four_overtones(440,2))
-    p.stdin.write(make_decayed_sine_wave_sound(440,2,3.0))
+    p.stdin.write(make_sine_wave_sound(440,2,3.0))
 
 
 
