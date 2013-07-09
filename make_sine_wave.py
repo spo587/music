@@ -9,7 +9,7 @@ bit = 32
 sample_rate = 100000.0
 
  
-def make_sine_wave(freq,duration):
+def build_sine_wave(freq,duration):
     note_string_ints = []
     for i in range(0,int(duration*freq*sample_rate/freq)):
         amplitude = (2**bit - 1)/2.0
@@ -27,8 +27,8 @@ def make_bytes_wave(note_string_ints):
 
 
 
-def make_sound(freq,duration):
-    ints = make_sine_wave(freq,duration)
+def make_sine_wave_sound(freq,duration):
+    ints = build_sine_wave(freq,duration)
     bytes = make_bytes_wave(ints)
     return bytes
 

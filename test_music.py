@@ -38,7 +38,7 @@ class Note(object):
         
     def play_note(self):
         p = subprocess.Popen(['sox', '-r', str(sample_rate), '-b', str(bit) , '-c', '1', '-t', 'raw', '-e', 'unsigned-integer', '-', '-d'], stdin=subprocess.PIPE)
-        return p.stdin.write(msw.make_sound(self.parse_freq(),self.parse_length()))
+        return p.stdin.write(msw.make_sine_wave_sound(self.parse_freq(),self.parse_length()))
 
 class Tune(object):
     def __init__(self,notes):
