@@ -1,12 +1,14 @@
 import subprocess
 import os
+import math
+note_string = ''
+import struct
+import make_sine_wave as msw 
 
  
-def play_waveform(form):
-    s = 'echo %s | sox -r 54000 -b 8 -c 1 -t raw -s - -d' % form
-    print s
-    os.system(s)
-
+sample_rate = 50000
+bit = 32
+ 
 
  
 class Note(object):
@@ -16,6 +18,7 @@ class Note(object):
         note_dict[note + '#'] = note_dict[note] + 1
         note_dict[note + 'b'] = note_dict[note] - 1
         #to-add: doublesharps and flats too
+
 
     def __init__(self, name, value):
         '''name=pitch class, a tuple of (alphabet letter, octave). octave = 0 is the first octave 
@@ -34,8 +37,8 @@ class Note(object):
         return freq
         
     def play_note(self):
-        s = 'play -n synth %s sine %s' % (self.parse_length(), self.parse_freq())
-        return os.system(s)
+        p = subprocess.Popen(['sox', '-r', str(sample_rate), '-b', str(bit) , '-c', '1', '-t', 'raw', '-e', 'unsigned-integer', '-', '-d'], stdin=subprocess.PIPE)
+        return p.stdin.write(msw.make_sound(self.parse_freq(),self.parse_length()))
 
 class Tune(object):
     def __init__(self,notes):
@@ -43,22 +46,27 @@ class Tune(object):
         self.notes = notes
 
     def play(self):
-        result = self.notes[0].play_note()
-        for i in range(1,len(self.notes)):
-            result += self.notes[i].play_note()
-        return result
+        # result = self.notes[0].play_note()
+        for i in range(len(self.notes)):
+            self.notes[i].play_note()
+        
 
-ode_firstphrase = Tune([Note(('f',-2),1/2.0),Note(('a',0),1/4.0),Note(('a',0),1/4.0),
-                Note(('bb',0),1/4.0), Note(('c',0),1/4.0),Note(('c',0),1/4.0),
-                Note(('bb',0),1/4.0),Note(('a',0),1/4.0),Note(('g',-1),1/4.0),
-                Note(('f',-1),1/4.0),Note(('f',-1),1/4.0),Note(('g',-1),1/4.0),
-                Note(('a',0),1/4.0),Note(('a',0),1/4.0+1/8.0),Note(('g',-1),1/8.0),Note(('g',-1),1/2.0)])
+ode_firstphrase = Tune([Note(('f',-1),1/2.0),Note(('a',1),1/4.0),Note(('a',1),1/4.0),
+                Note(('bb',1),1/4.0), Note(('c',1),1/4.0),Note(('c',1),1/4.0),
+                Note(('bb',1),1/4.0),Note(('a',1),1/4.0),Note(('g',0),1/4.0),
+                Note(('f',0),1/4.0),Note(('f',0),1/4.0),Note(('g',0),1/4.0),
+                Note(('a',1),1/4.0),Note(('a',1),1/4.0+1/8.0),Note(('g',0),1/8.0),Note(('g',0),1/2.0)])
 
 
 # ode_second_phrase = Tune(ode_firstphrase.notes[1:13]Note(('g',-1),1/4.0+1/8.0)
-
+note1 = Note(('b#',0),1/2.0)
+note2 = Note(('b',0),1/2.0)
  
 if __name__ == '__main__':
-    tempo = 200 #quarter note beats per minute
+    tempo = 150 #quarter note beats per minute
     ode_firstphrase.play()
+    note1.play_note()
+    assert False
+
+    
     
