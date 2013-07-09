@@ -45,13 +45,13 @@ def combine_five_sine_waves(waves):
     return note_string_ints
 
 
-def make_tone_fundamental_four_overtones(freq,duration,relative_powers=[0.1,0.1,0.05,0.03]):
+def make_tone_fundamental_four_overtones(freq,duration,relative_powers=[0.5,0.1,0.1,0.05,0.03]):
     '''relative powers a list of the relative powers of the four overtones'''
-    wave1 = build_sine_wave(freq,duration)
-    wave2 = build_sine_wave(freq*2,duration,relative_powers[0]*(2**bit - 1)/2.0)
-    wave3 = build_sine_wave(freq*3,duration,relative_powers[1]*(2**bit - 1)/2.0)
-    wave4 = build_sine_wave(freq*4,duration,relative_powers[2]*(2**bit - 1)/2.0)
-    wave5 = build_sine_wave(freq*5,duration,relative_powers[3]*(2**bit - 1)/2.0)
+    wave1 = build_sine_wave(freq,duration,relative_powers[0]*(2**bit-1)/2.0)
+    wave2 = build_sine_wave(freq*2,duration,relative_powers[1]*(2**bit - 1)/2.0)
+    wave3 = build_sine_wave(freq*3,duration,relative_powers[2]*(2**bit - 1)/2.0)
+    wave4 = build_sine_wave(freq*4,duration,relative_powers[3]*(2**bit - 1)/2.0)
+    wave5 = build_sine_wave(freq*5,duration,relative_powers[4]*(2**bit - 1)/2.0)
     waves = [wave1,wave2,wave3,wave4,wave5]
     ints = combine_five_sine_waves(waves)
     bytes = make_bytes_wave(ints)
@@ -61,6 +61,11 @@ def make_tone_fundamental_four_overtones(freq,duration,relative_powers=[0.1,0.1,
 
 def make_sine_wave_sound(freq,duration):
     ints = build_sine_wave(freq,duration)
+    bytes = make_bytes_wave(ints)
+    return bytes
+
+def make_decayed_sine_wave_sound(freq,duration,k):
+    ints = decayed_sine_wave(build_sine_wave(freq,duration),k)
     bytes = make_bytes_wave(ints)
     return bytes
 
@@ -92,7 +97,8 @@ if __name__ == '__main__':
     
     p = subprocess.Popen(['sox', '-r', str(sample_rate), '-b', str(bit) , '-c', '1', '-t', 'raw', '-e', 'unsigned-integer', '-', '-d'], stdin=subprocess.PIPE)
 
-    p.stdin.write(make_tone_fundamental_four_overtones(440,2))
+    # p.stdin.write(make_tone_fundamental_four_overtones(440,2))
+    p.stdin.write(make_decayed_sine_wave_sound(440,2,3.0))
 
 
 
