@@ -3,26 +3,25 @@ import matplotlib.pyplot as mpl
 import os
 import math
 import struct
+
 bit = 32
-
 sample_rate = 100000.0
-
 wave_peak = (2**bit - 1)/2.0
 
-
 class Tone(object):
-    def __init__(self, fund_freq, duration, overtone_strengths_dict, overtone_decay_dict):
+    def __init__(self, fund_freq, duration, overtone_strengths_dict, overtone_constants_dict, overtone_decay_func_dict):
         '''overtone_strengths_dict is a dictionary of the relative initial amplitudes of the fundamental and its overtones
         overtone_decay_dict is a dict of the time constants of the fundamental and its overtones'''
         self.fund_freq = fund_freq
         self.duration = duration
         self.overtone_strengths_dict = overtone_strengths_dict
-        self.overtone_decay_dict = overtone_decay_dict 
+        self.overtone_constants_dict = overtone_constants_dict 
+        self.overtone_decay_func_dict = overtone_decay_func_dict
 
     def build_sine_waves(self):
         waves = []
         for overtone in self.overtone_strengths_dict.keys():
-            wave = build_sine_wave(overtone*self.fund_freq,self.duration,self.overtone_decay_dict[overtone],wave_peak*self.overtone_strengths_dict[overtone])
+            wave = build_sine_wave(overtone*self.fund_freq,self.duration,self.overtone_constants_dict[overtone],wave_peak*self.overtone_strengths_dict[overtone],self.overtone_decay_func_dict[overtone])
             waves.append(wave)
         print len(waves)
         return waves
@@ -42,16 +41,22 @@ class Tone(object):
 
 
 
-def exponential_decay(k,t):
-    return math.exp(-k*t)
+def exponential_decay(k,time):
+    return math.exp(-k*time)
+
+def linear_decay(k,time):
+    return (1 - k*time)
+
+def no_decay(k,time):
+    return 1
 
  
-def build_sine_wave(freq, duration, time_constant=0, max_amplitude=wave_peak):
+def build_sine_wave(freq, duration, time_constant=0, max_amplitude=wave_peak, decay_function=exponential_decay):
     note_string_ints = []
     for i in range(0,int(duration*freq*sample_rate/freq)):
         offset = (2**bit - 1)/2.0
         phase = math.pi*2*i*freq/sample_rate
-        note_string_ints.append(int(round(max_amplitude*exponential_decay(time_constant,i/sample_rate)*math.sin(phase)+offset)))
+        note_string_ints.append(int(round(max_amplitude*decay_function(time_constant,i/sample_rate)*math.sin(phase)+offset)))
     return note_string_ints
 
 
@@ -72,9 +77,15 @@ def make_sine_wave_sound(freq,duration,time_constant=0,max_amplitude=wave_peak):
     bytes = make_bytes_wave(ints)
     return bytes
 
-dict1 = {1:0.5, 2: 0.1, 3: 0.1, 4: 0.05, 5: 0.15, 6: 0.3}
-dict2 = {1: 1.0, 2: 1.5, 3: 2.0, 4: 2.0, 5: 4.0, 6: 4.0}
-tone1 = Tone(440,3,dict1,dict2)
+dict1 = {1:0.5, 2: 0.1, 3: 0.1, 4: 0.05, 5: 0.05, 6: 0.3, 7:0.2, 8: 0.1, 9: 0.1, 10: 0.1, 11: 0.1, 12: 0.4, 13: 0.2}
+dict2 = {1: 0.1, 2: 0.2, 3: 0.3, 4: 0.2, 5: 7.0, 6: 12.0, 7: 12.0, 8:15.0, 9: 10.0, 10: 10.0, 11: 7.0, 12: 6.0, 13: 7.0}
+dict3 = {}
+for i in range(1,5):
+    dict3[i] = linear_decay
+for i in range(5,14):
+    dict3[i] = exponential_decay
+tone1 = Tone(440,2,dict1,dict2, dict3)
+tone2 = Tone(440*1.5,2,dict1,dict2,dict3)
 
 
 
@@ -90,6 +101,7 @@ def bytes_to_ints(bytes):
 
 if __name__ == '__main__':
     tone1.play_tone()
+    tone2.play_tone()
     # wave = build_sine_wave(440,0.1)
 
     # decayed = decayed_sine_wave(wave,1.0)
@@ -107,21 +119,5 @@ if __name__ == '__main__':
 
 
 
-# def make_tone_fundamental_four_overtones(freq,duration,relative_powers=[0.5,0.1,0.1,0.05,0.03]):
-#     '''relative powers a list of the relative powers of the four overtones'''
-#     wave1 = build_sine_wave(freq,duration,relative_powers[0]*wave_peak)
-#     wave2 = build_sine_wave(freq*2,duration,relative_powers[1]*wave_peak)
-#     wave3 = build_sine_wave(freq*3,duration,relative_powers[2]*wave_peak)
-#     wave4 = build_sine_wave(freq*4,duration,relative_powers[3]*wave_peak)
-#     wave5 = build_sine_wave(freq*5,duration,relative_powers[4]*wave_peak)
-#     waves = [wave1,wave2,wave3,wave4,wave5]
-#     ints = combine_five_sine_waves(waves)
-#     bytes = make_bytes_wave(ints)
-#     return bytes
 
-
-# def make_tone_two_sine_waves(freq1,freq2,duration,relative_power=0.1):
-#     ints = combine_two_sine_waves(build_sine_wave(freq1,duration),build_sine_wave(freq2,duration,relative_power*(2**bit - 1)/2.0))
-#     bytes = make_bytes_wave(ints)
-#     return bytes
 
