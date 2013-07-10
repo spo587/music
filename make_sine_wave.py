@@ -1,5 +1,4 @@
 import subprocess
-import matplotlib.pyplot as mpl
 import os
 import math
 import struct
@@ -8,17 +7,49 @@ from collections import defaultdict
 bit = 32
 sample_rate = 50000.0
 wave_peak = (2**bit - 1)/2.0
+tempo = 60
+
+class Chord(object):
+    def __init__(self,tones):
+        self.tones = tones
+        self.bytes = self.make_bytes()
+
+    def combine_tones(self):
+        waves = [tone.combine_waves() for tone in self.tones]
+        return combine_n_sine_waves(*waves)
+    
+    def make_bytes(self):
+        note_string_ints = self.combine_tones()
+        return make_bytes_wave(note_string_ints)
+
+
+
 
 class Tone(object):
-    def __init__(self, fund_freq, duration, overtone_strengths_dict, overtone_constants_dict, overtone_decay_func_dict):
+    note_dict = {'a':0,'b':2,'c':3,'d':5,'e':7,'f':8,'g':10}
+    for note in note_dict.keys():
+        note_dict[note + '#'] = note_dict[note] + 1
+        note_dict[note + 'b'] = note_dict[note] - 1
+    def __init__(self, name, note_value, overtone_strengths_dict, overtone_constants_dict, overtone_decay_func_dict):
         '''overtone_strengths_dict is a dictionary of the relative initial amplitudes of the fundamental and its overtones
         overtone_decay_dict is a dict of the time constants of the fundamental and its overtones'''
-        self.fund_freq = fund_freq
-        self.duration = duration
+        self.name = name
+        self.note_value = note_value
+        self.fund_freq = self.parse_freq()
+        self.duration = self.parse_duration()
         self.overtone_strengths_dict = overtone_strengths_dict
         self.overtone_constants_dict = overtone_constants_dict 
         self.overtone_decay_func_dict = overtone_decay_func_dict
         self.bytes = self.make_waves_into_bytes()
+
+    def parse_duration(self):
+        duration = self.note_value*4*60/float(tempo)
+        return duration
+
+    def parse_freq(self):
+        half_steps_above_440 = Tone.note_dict[self.name[0]]+12*self.name[1]
+        fund_freq = 440*2**(float(half_steps_above_440)/12)
+        return fund_freq
     def build_sine_waves(self):
         waves = []
         for overtone in self.overtone_strengths_dict.keys():
@@ -108,19 +139,43 @@ for i in range(1,5):
     dict3[i] = linear_decay
 for i in range(5,14):
     dict3[i] = exponential_decay
-tone1 = Tone(300,0.5,dict1,dict2, dict3)
+tone_a_quarter = Tone(('a',-1),1/4.0,dict1,dict2, dict3)
 
-tone2 = Tone(150*1.5,0.5,dict1,dict2,dict3)
+tone_e_quarter = Tone(('e',-2),1/4.0,dict1,dict2,dict3)
 
-tone3 = Tone(150*1.5*9.0/8,0.5,dict1,dict2,dict3)
+tone_fsharp_quarter = Tone(('f#',-2),1/4.0,dict1,dict2,dict3)
 
-tone4 = Tone(150*1.5,1.0,dict1,dict2,dict3)
+tone_e_half = Tone(('e',-2),1/2.0,dict1,dict2,dict3)
 
-tone5 = Tone(300*5.0/4,0.5,dict1,dict2,dict3)
+tone_csharp_quarter = Tone(('c#',-1),1/4.0,dict1,dict2,dict3)
 
-tone6 = Tone(300*9.0/8,0.5,dict1,dict2,dict3)
+tone_b_quarter = Tone(('b',-1),1/4.0,dict1,dict2,dict3)
 
-tone7 = Tone(300,2.0,dict1,dict2, dict3)
+tone_a_whole = Tone(('a',-1),1.0,dict1,dict2, dict3)
+
+tone_bass_a_quarter = Tone(('a',-2),1.0,dict1,dict2, dict3)
+
+tone_bass_csharp_qarter = Tone(('c#',-2),1/4.0,dict1,dict2,dict3)
+
+tone_bass_d_quarter = Tone(('d',-2),1/4.0,dict1,dict2,dict3)
+
+tone_bass_csharp_half = Tone(('c#',-2),1/2.0,dict1,dict2,dict3)
+
+tone_bass_a_whole = Tone(('a',-2),1/1.0,dict1,dict2, dict3)
+
+chord1 = Chord([tone_a_quarter,tone_bass_a_quarter])
+
+chord2 = Chord([tone_bass_csharp_qarter,tone_e_quarter])
+
+chord3 = Chord([tone_bass_d_quarter,tone_fsharp_quarter])
+
+chord4 = Chord([tone_e_half,tone_bass_csharp_half])
+
+chord5 = Chord([tone_csharp_quarter,tone_e_quarter])
+
+chord6 = Chord([tone_b_quarter,tone_e_quarter])
+
+chord7 = Chord([tone_bass_a_whole,tone_a_whole])
 
 # dict4 = {1:0.0, 2:0.0, 3:1.0, 4:1.0, 5:1.0, 6:1.0, 7:1.0}
 # dict5 = defaultdict(int)
@@ -137,49 +192,53 @@ tone7 = Tone(300,2.0,dict1,dict2, dict3)
 #     def __init__(self,num_divisions,time_cutoffs, function_dict):
 
 
-def decay_func_1(time):
-    if time < 0.2:
-        return 5*time
-    elif time < 0.4:
-        return math.exp(-5*(time-0.2))
-    else:
-        return math.exp(-5*(0.4-0.2)) - 0.1*(time-0.4)
+# def decay_func_1(time):
+#     if time < 0.2:
+#         return 5*time
+#     elif time < 0.4:
+#         return math.exp(-5*(time-0.2))
+#     else:
+#         return math.exp(-5*(0.4-0.2)) - 0.1*(time-0.4)
 
-def decay_func_2(time):
-    if time < 0.2:
-        return 5*time
-    elif time < 0.4:
-        return 5*0.2 - 3*(time-0.2)
-    else:
-        return 0.4 - 0.1*(time-0.4)
+# def decay_func_2(time):
+#     if time < 0.2:
+#         return 5*time
+#     elif time < 0.4:
+#         return 5*0.2 - 3*(time-0.2)
+#     else:
+#         return 0.4 - 0.1*(time-0.4)
 
-sine1 = Sine_wave(440,4,decay_func_2)
-
-
+# sine1 = Sine_wave(440,4,decay_func_2)
 
 
-def bytes_to_ints(bytes):
-    l =[]
-    for i in range(len(bytes)/4):
-        print repr(bytes[4*i:4*i+4])
-        l.append(struct.unpack('I',bytes[4*i:4*i+4]))
-
-    return l
 
 
 if __name__ == '__main__':
-    play(tone1.bytes)
-    play(tone1.bytes)
-    play(tone1.bytes)
-    play(tone2.bytes)
-    play(tone3.bytes)
-    play(tone3.bytes)
-    play(tone4.bytes)
-    play(tone5.bytes)
-    play(tone5.bytes)
-    play(tone6.bytes)
-    play(tone6.bytes)
-    play(tone7.bytes)
+    tempo = 100
+    play(chord1.bytes)
+    play(chord1.bytes)
+    play(chord1.bytes)
+    play(chord2.bytes)
+    play(chord3.bytes)
+    play(chord3.bytes)
+    play(chord4.bytes)
+    play(chord5.bytes)
+    play(chord5.bytes)
+    play(chord6.bytes)
+    play(chord6.bytes)
+    play(chord7.bytes)
+    # play(tone1.bytes)
+    # play(tone1.bytes)
+    # play(tone1.bytes)
+    # play(tone2.bytes)
+    # play(tone3.bytes)
+    # play(tone3.bytes)
+    # play(tone4.bytes)
+    # play(tone5.bytes)
+    # play(tone5.bytes)
+    # play(tone6.bytes)
+    # play(tone6.bytes)
+    # play(tone7.bytes)
 
     # wave = build_sine_wave(440,0.1)
 
