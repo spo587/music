@@ -6,89 +6,9 @@ from collections import defaultdict
 import time
 
 bit = 32
-sample_rate = 10000.0
+sample_rate = 20000.0
 wave_peak = (2**bit - 1)/2.0
 tempo = 160
-
-class Chord(object):
-    def __init__(self,tones):
-        self.tones = tones
-        #self.bytes = self.make_bytes()
-
-    def combine_tones(self):
-        waves = [tone.combine_waves() for tone in self.tones]
-        return combine_n_sine_waves(*waves)
-    
-    def make_bytes(self):
-        note_string_ints = self.combine_tones()
-        return make_bytes_wave(note_string_ints)
-
-
-
-
-class Tone(object):
-    note_dict = {'a':0,'b':2,'c':3,'d':5,'e':7,'f':8,'g':10}
-    for note in note_dict.keys():
-        note_dict[note + '#'] = note_dict[note] + 1
-        note_dict[note + 'b'] = note_dict[note] - 1
-    def __init__(self, name, note_value, overtone_strengths_dict, overtone_constants_dict, overtone_decay_func_dict):
-        '''overtone_strengths_dict is a dictionary of the relative initial amplitudes of the fundamental and its overtones
-        overtone_decay_dict is a dict of the time constants of the fundamental and its overtones'''
-        self.name = name
-        self.note_value = note_value
-        self.fund_freq = self.parse_freq()
-        self.duration = self.parse_duration()
-        self.overtone_strengths_dict = overtone_strengths_dict
-        self.overtone_constants_dict = overtone_constants_dict 
-        self.overtone_decay_func_dict = overtone_decay_func_dict
-
-    def parse_duration(self):
-        duration = self.note_value*4*60/float(tempo)
-        return duration
-
-    def parse_freq(self):
-        half_steps_above_440 = Tone.note_dict[self.name[0]]+12*self.name[1]
-        fund_freq = 440*2**(float(half_steps_above_440)/12)
-        return fund_freq
-    def build_sine_waves(self):
-        waves = []
-        for overtone in self.overtone_strengths_dict.keys():
-            wave = build_sine_wave(overtone*self.fund_freq,self.duration,self.overtone_constants_dict[overtone],wave_peak*self.overtone_strengths_dict[overtone],self.overtone_decay_func_dict[overtone])
-            waves.append(wave)
-        #print len(waves)
-        return waves
-
-    def combine_waves(self):
-        waves = self.build_sine_waves()
-        return combine_n_sine_waves(*waves)
-
-    def make_waves_into_bytes(self):
-        note_string_ints = self.combine_waves()
-        bytes = make_bytes_wave(note_string_ints)
-        return bytes
-
-
-
-
-def play(list_of_chords):
-    bytes = combine_chords(list_of_chords)
-    p = subprocess.Popen(['sox', '-r', str(sample_rate), '-b', str(bit) , '-c', '1', '-t', 'raw', '-e', 'unsigned-integer', '-', '-d'], stderr=subprocess.PIPE, stdin=subprocess.PIPE)
-    return p.stdin.write(bytes)
-
-
-
-
-def combine_chords(list_of_chords):
-    """
-    Retsdfa
-
-    >>> combine_byte([chord1.to_bytes(),chord2.to_bytes])"""
-    return ''.join([chord.make_bytes() for chord in list_of_chords])
-
-
-
-
-
 
 def exponential_decay(k,time):
     return math.exp(-k*time)
@@ -99,7 +19,95 @@ def linear_decay(k,time):
 def no_decay(k,time):
     return 1
 
- 
+class Instrument(object):
+    def __init__(self,name,overtone_decay_func_dict,overtone_strengths_dict,overtone_constants_dict):
+        self.name = name
+        self.overtone_decay_func_dict = overtone_decay_func_dict
+        self.overtone_constants_dict = overtone_constants_dict
+        self.overtone_strengths_dict = overtone_strengths_dict
+
+    def build_sine_waves(self,fund_freq,duration):
+        waves = []
+        for overtone in self.overtone_strengths_dict.keys():
+            wave = build_sine_wave(overtone*fund_freq,duration,self.overtone_constants_dict[overtone],wave_peak*self.overtone_strengths_dict[overtone],self.overtone_decay_func_dict[overtone])
+            waves.append(wave)
+        #print len(waves)
+        return waves
+
+    def combine_waves(self,fund_freq,duration):
+        waves = self.build_sine_waves(fund_freq,duration)
+        return combine_n_sine_waves(*waves)
+
+    def convert_to_bytes(self,fund_freq,duration):
+        note_string_ints = self.combine_waves(fund_freq,duration)
+        bytes = make_bytes_wave(note_string_ints)
+        return bytes
+
+
+dict1 = {1:0.5, 2: 0.1, 3: 0.1, 4: 0.05, 5: 0.05, 6: 0.01, 7:0.01, 8: 0.01, 9: 0.01}
+dict2 = {1: 0.1, 2: 0.2, 3: 0.3, 4: 0.2, 5: 7.0, 6: 12.0, 7: 12.0, 8:7.0, 9: 8.0}
+dict3 = {}
+for i in range(1,5):
+    dict3[i] = linear_decay
+for i in range(5,14):
+    dict3[i] = exponential_decay
+
+crappy_instrument = Instrument('crappy',dict3,dict1,dict2)
+
+class Chord(object):
+    def __init__(self,tones):
+        self.tones = tones
+        #self.bytes = self.make_bytes()
+
+    def combine_tones(self):
+        waves = [tone.instrument.combine_waves(tone.fund_freq,tone.duration) for tone in self.tones]
+        return combine_n_sine_waves(*waves)
+    
+    def convert_to_bytes(self):
+        note_string_ints = self.combine_tones()
+        return convert_to_bytes(note_string_ints)
+
+
+class Tone(object):
+    note_dict = {'a':0,'b':2,'c':3,'d':5,'e':7,'f':8,'g':10}
+    for note in note_dict.keys():
+        note_dict[note + '#'] = note_dict[note] + 1
+        note_dict[note + 'b'] = note_dict[note] - 1
+    def __init__(self, name, note_value, instrument=crappy_instrument):
+        '''overtone_strengths_dict is a dictionary of the relative initial amplitudes of the fundamental and its overtones
+        overtone_decay_dict is a dict of the time constants of the fundamental and its overtones'''
+        self.name = name
+        self.note_value = note_value
+        self.fund_freq = self.parse_freq()
+        self.duration = self.parse_duration()
+        self.overtone_strengths_dict = instrument.overtone_strengths_dict
+        self.overtone_constants_dict = instrument.overtone_constants_dict 
+        self.overtone_decay_func_dict = instrument.overtone_decay_func_dict
+        self.instrument = instrument
+
+    def parse_duration(self):
+        duration = self.note_value*4*60/float(tempo)
+        return duration
+
+    def parse_freq(self):
+        half_steps_above_440 = Tone.note_dict[self.name[0]]+12*self.name[1]
+        fund_freq = 440*2**(float(half_steps_above_440)/12)
+        return fund_freq
+    def convert_to_bytes(self):
+        instrument.convert_to_bytes(self.fund_freq,self.duration)
+
+
+def play(list_of_chords):
+    bytes = combine_chords(list_of_chords)
+    p = subprocess.Popen(['sox', '-r', str(sample_rate), '-b', str(bit) , '-c', '1', '-t', 'raw', '-e', 'unsigned-integer', '-', '-d'], stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+    return p.stdin.write(bytes)
+
+
+def combine_chords(list_of_things):
+    """
+    >>> combine_byte([chord1.to_bytes(),chord2.to_bytes])"""
+    return ''.join([thing.convert_to_bytes() for thing in list_of_things])
+
 class Sine_wave(object):
     def __init__(self,freq,duration,decay_func):
         self.freq = freq
@@ -116,17 +124,12 @@ class Sine_wave(object):
         for i in range(len(note_string_ints)):
             note_string_ints[i] = self.decay_func(i/sample_rate)*note_string_ints[i]
         return note_string_ints
-    def make_bytes(self):
+    def convert_to_bytes(self):
         ints = self.apply_decay_func()
-        bytes = make_bytes_wave(ints)
-        return bytes
+        bytes = convert_to_bytes(ints)
+        return bytes        
 
-
-
-
-         
-
-def build_sine_wave(freq, duration, time_constant=0, max_amplitude=wave_peak, decay_function=exponential_decay):
+def build_sine_wave(freq, duration, time_constant=0.0, max_amplitude=wave_peak, decay_function=exponential_decay):
     note_string_ints = []
     for i in range(0,int(duration*freq*sample_rate/freq)):
         offset = (2**bit - 1)/2.0
@@ -135,7 +138,7 @@ def build_sine_wave(freq, duration, time_constant=0, max_amplitude=wave_peak, de
     return note_string_ints
 
 
-def make_bytes_wave(note_string_ints):
+def convert_to_bytes(note_string_ints):
     l = [struct.pack('I',num) for num in note_string_ints]
     bytes  = ''.join(l)
     return bytes
@@ -147,125 +150,42 @@ def combine_n_sine_waves(*waves):
 
 
 
+def twinkle_twinkle():
 
+    a = Tone(('a',0),1/4.0)
+    e = Tone(('e',0),1/4.0)
+    fsharp = Tone(('f#',0),1/4.0)
+    d = Tone(('d',0),1/4.0)
+    csharp = Tone(('c#',0),1/4.0)
+    b = Tone(('b',0),1/4.0)
+    a_whole = Tone(('a',0),1.0/2.0)
+    bass_a = Tone(('a',-2),1.0)
+    middle_a = Tone(('a',-1),1.0)
+    bass_csharp = Tone(('c#',-1),1/4.0)
+    middle_d = Tone(('d',-1),1/4.0)
+    bass_b = Tone(('b',-1),1/4.0)
+    bass_gsharp = Tone(('g#',-2),1/4.0)
+    bass_fsharp = Tone(('f#',-2),1/4.0)
+    bass_d = Tone(('d',-2),1/4.0)
+    bass_e = Tone(('e',-2),1/4.0)
+    bass_a_whole = Tone(('a',-2),1/2.0)
 
+    melody = [a,a,e,e,fsharp,fsharp,e,e,
+              d,d,csharp,csharp,b,b,a_whole]
+    bass = [bass_a,middle_a,bass_csharp,middle_a,middle_d,
+            middle_a,bass_csharp,middle_a,bass_b,bass_gsharp,middle_a,
+            bass_fsharp,bass_d,bass_e,bass_a_whole]
 
-# dict4 = {1:0.0, 2:0.0, 3:1.0, 4:1.0, 5:1.0, 6:1.0, 7:1.0}
-# dict5 = defaultdict(int)
-# dict6 = {}
-# for i in range(1,8):
-#     dict6[i] = no_decay
+    melody_bass = zip(melody,bass)
 
-# tone3 = Tone(200,1,dict4,dict5,dict6)
-# tone4 = tone3
-# tone5 = Tone(200*1.5,1, dict4,dict5,dict6)
-# tone6 = tone5
-
-# class decay_function(object):
-#     def __init__(self,num_divisions,time_cutoffs, function_dict):
-
-
-# def decay_func_1(time):
-#     if time < 0.2:
-#         return 5*time
-#     elif time < 0.4:
-#         return math.exp(-5*(time-0.2))
-#     else:
-#         return math.exp(-5*(0.4-0.2)) - 0.1*(time-0.4)
-
-# def decay_func_2(time):
-#     if time < 0.2:
-#         return 5*time
-#     elif time < 0.4:
-#         return 5*0.2 - 3*(time-0.2)
-#     else:
-#         return 0.4 - 0.1*(time-0.4)
-
-# sine1 = Sine_wave(440,4,decay_func_2)
-
-def test():
-    dict1 = {1:0.5, 2: 0.1, 3: 0.1, 4: 0.05, 5: 0.05, 6: 0.3, 7:0.2, 8: 0.1, 9: 0.1, 10: 0.1, 11: 0.1, 12: 0.4, 13: 0.2}
-    dict2 = {1: 0.1, 2: 0.2, 3: 0.3, 4: 0.2, 5: 7.0, 6: 12.0, 7: 12.0, 8:15.0, 9: 10.0, 10: 10.0, 11: 7.0, 12: 6.0, 13: 7.0}
-    dict3 = {}
-    for i in range(1,5):
-        dict3[i] = linear_decay
-    for i in range(5,14):
-        dict3[i] = exponential_decay
-    tone_a_quarter = Tone(('a',0),1/4.0,dict1,dict2, dict3)
-
-    tone_e_quarter = Tone(('e',0),1/4.0,dict1,dict2,dict3)
-
-    tone_fsharp_quarter = Tone(('f#',0),1/4.0,dict1,dict2,dict3)
-
-    tone_d_quarter = Tone(('d',0),1/4.0,dict1,dict2,dict3)
-
-    tone_csharp_quarter = Tone(('c#',0),1/4.0,dict1,dict2,dict3)
-
-    tone_b_quarter = Tone(('b',0),1/4.0,dict1,dict2,dict3)
-
-    tone_a_whole = Tone(('a',0),1.0/2.0,dict1,dict2, dict3)
-
-    tone_bass_a_quarter = Tone(('a',-2),1.0,dict1,dict2, dict3)
-
-    tone_middle_a_quarter = Tone(('a',-1),1.0,dict1,dict2, dict3)
-
-
-    tone_bass_csharp_qarter = Tone(('c#',-1),1/4.0,dict1,dict2,dict3)
-
-    tone_middle_d_quarter = Tone(('d',-1),1/4.0,dict1,dict2,dict3)
-
-    tone_bass_b_quarter = Tone(('b',-1),1/4.0,dict1,dict2,dict3)
-
-    tone_bass_gsharp_quarter = Tone(('g#',-2),1/4.0,dict1,dict2,dict3)
-
-    tone_bass_fsharp_quarter = Tone(('f#',-2),1/4.0,dict1,dict2,dict3)
-
-    tone_bass_d_quarter = Tone(('d',-2),1/4.0,dict1,dict2,dict3)
-
-    tone_bass_e_quarter = Tone(('e',-2),1/4.0,dict1,dict2,dict3)
-
-    tone_bass_a_whole = Tone(('a',-2),1/2.0,dict1,dict2, dict3)
-
-    chord1 = Chord([tone_a_quarter,tone_bass_a_quarter])
-
-    chord2 = Chord([tone_a_quarter,tone_middle_a_quarter])
-
-    chord3 = Chord([tone_bass_csharp_qarter,tone_e_quarter])
-
-    chord4 = Chord([tone_middle_a_quarter,tone_e_quarter])
-
-    chord5 = Chord([tone_middle_d_quarter,tone_fsharp_quarter])
-
-    chord6 = Chord([tone_middle_a_quarter,tone_fsharp_quarter])
-
-    chord7 = chord3
-
-    chord8 = chord4
-
-    chord9 = Chord([tone_bass_b_quarter,tone_d_quarter])
-
-    chord10 = Chord([tone_bass_gsharp_quarter,tone_d_quarter])
-
-    chord11 = Chord([tone_middle_a_quarter,tone_csharp_quarter])
-
-    chord12 = Chord([tone_bass_fsharp_quarter,tone_csharp_quarter])
-
-    chord13 = Chord([tone_bass_d_quarter,tone_b_quarter])
-    chord14 = Chord([tone_bass_e_quarter,tone_b_quarter])
-
-    chord15 = Chord([tone_bass_a_whole,tone_a_whole])
-
-
-    tune1 = [chord1,chord2,chord3,chord4,chord5,
-            chord6,chord7,chord8,chord9,chord10,
-            chord11,chord12,chord13,chord14,chord15]
-    return tune1
+    chords = [Chord(item) for item in melody_bass]
+    return chords
 
 
 
 if __name__ == '__main__':
     t_0 = time.time()
-    tune1 = test()
+    tune1 = twinkle_twinkle()
     t_1 = time.time()
     print t_1 - t_0
     play(tune1)
