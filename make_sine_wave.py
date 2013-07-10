@@ -73,6 +73,17 @@ def play(bytes):
     return p.stdin.write(bytes)
 
 
+def combine_bytes(list_of_bytes):
+    """
+    Retsdfa
+
+    >>> combine_byte([chord1.to_bytes(),chord2.to_bytes])"""
+    return sum(list_of_bytes,'')
+
+
+
+
+
 
 def exponential_decay(k,time):
     return math.exp(-k*time)
@@ -132,50 +143,7 @@ def combine_n_sine_waves(*waves):
 
 
 
-dict1 = {1:0.5, 2: 0.1, 3: 0.1, 4: 0.05, 5: 0.05, 6: 0.3, 7:0.2, 8: 0.1, 9: 0.1, 10: 0.1, 11: 0.1, 12: 0.4, 13: 0.2}
-dict2 = {1: 0.1, 2: 0.2, 3: 0.3, 4: 0.2, 5: 7.0, 6: 12.0, 7: 12.0, 8:15.0, 9: 10.0, 10: 10.0, 11: 7.0, 12: 6.0, 13: 7.0}
-dict3 = {}
-for i in range(1,5):
-    dict3[i] = linear_decay
-for i in range(5,14):
-    dict3[i] = exponential_decay
-tone_a_quarter = Tone(('a',-1),1/4.0,dict1,dict2, dict3)
 
-tone_e_quarter = Tone(('e',-2),1/4.0,dict1,dict2,dict3)
-
-tone_fsharp_quarter = Tone(('f#',-2),1/4.0,dict1,dict2,dict3)
-
-tone_e_half = Tone(('e',-2),1/2.0,dict1,dict2,dict3)
-
-tone_csharp_quarter = Tone(('c#',-1),1/4.0,dict1,dict2,dict3)
-
-tone_b_quarter = Tone(('b',-1),1/4.0,dict1,dict2,dict3)
-
-tone_a_whole = Tone(('a',-1),1.0,dict1,dict2, dict3)
-
-tone_bass_a_quarter = Tone(('a',-2),1.0,dict1,dict2, dict3)
-
-tone_bass_csharp_qarter = Tone(('c#',-2),1/4.0,dict1,dict2,dict3)
-
-tone_bass_d_quarter = Tone(('d',-2),1/4.0,dict1,dict2,dict3)
-
-tone_bass_csharp_half = Tone(('c#',-2),1/2.0,dict1,dict2,dict3)
-
-tone_bass_a_whole = Tone(('a',-2),1/1.0,dict1,dict2, dict3)
-
-chord1 = Chord([tone_a_quarter,tone_bass_a_quarter])
-
-chord2 = Chord([tone_bass_csharp_qarter,tone_e_quarter])
-
-chord3 = Chord([tone_bass_d_quarter,tone_fsharp_quarter])
-
-chord4 = Chord([tone_e_half,tone_bass_csharp_half])
-
-chord5 = Chord([tone_csharp_quarter,tone_e_quarter])
-
-chord6 = Chord([tone_b_quarter,tone_e_quarter])
-
-chord7 = Chord([tone_bass_a_whole,tone_a_whole])
 
 # dict4 = {1:0.0, 2:0.0, 3:1.0, 4:1.0, 5:1.0, 6:1.0, 7:1.0}
 # dict5 = defaultdict(int)
@@ -214,19 +182,66 @@ chord7 = Chord([tone_bass_a_whole,tone_a_whole])
 
 
 if __name__ == '__main__':
+    dict1 = {1:0.5, 2: 0.1, 3: 0.1, 4: 0.05, 5: 0.05, 6: 0.3, 7:0.2, 8: 0.1, 9: 0.1, 10: 0.1, 11: 0.1, 12: 0.4, 13: 0.2}
+    dict2 = {1: 0.1, 2: 0.2, 3: 0.3, 4: 0.2, 5: 7.0, 6: 12.0, 7: 12.0, 8:15.0, 9: 10.0, 10: 10.0, 11: 7.0, 12: 6.0, 13: 7.0}
+    dict3 = {}
+    for i in range(1,5):
+        dict3[i] = linear_decay
+    for i in range(5,14):
+        dict3[i] = exponential_decay
+    tone_a_quarter = Tone(('a',-1),1/4.0,dict1,dict2, dict3)
+
+    tone_e_quarter = Tone(('e',-2),1/4.0,dict1,dict2,dict3)
+
+    # tone_fsharp_quarter = Tone(('f#',-2),1/4.0,dict1,dict2,dict3)
+
+    # tone_e_half = Tone(('e',-2),1/2.0,dict1,dict2,dict3)
+
+    # tone_csharp_quarter = Tone(('c#',-1),1/4.0,dict1,dict2,dict3)
+
+    # tone_b_quarter = Tone(('b',-1),1/4.0,dict1,dict2,dict3)
+
+    # tone_a_whole = Tone(('a',-1),1.0,dict1,dict2, dict3)
+
+    tone_bass_a_quarter = Tone(('a',-2),1.0,dict1,dict2, dict3)
+
+    tone_bass_csharp_qarter = Tone(('c#',-2),1/4.0,dict1,dict2,dict3)
+
+    tone_bass_d_quarter = Tone(('d',-2),1/4.0,dict1,dict2,dict3)
+
+    tone_bass_csharp_half = Tone(('c#',-2),1/2.0,dict1,dict2,dict3)
+
+    tone_bass_a_whole = Tone(('a',-2),1/1.0,dict1,dict2, dict3)
+
+    chord1 = Chord([tone_a_quarter,tone_bass_a_quarter])
+
+    chord2 = Chord([tone_bass_csharp_qarter,tone_e_quarter])
+
+    # chord3 = Chord([tone_bass_d_quarter,tone_fsharp_quarter])
+
+    # chord4 = Chord([tone_e_half,tone_bass_csharp_half])
+
+    # chord5 = Chord([tone_csharp_quarter,tone_e_quarter])
+
+    # chord6 = Chord([tone_b_quarter,tone_e_quarter])
+
+    chord7 = Chord([tone_bass_a_whole,tone_a_whole])
     tempo = 100
-    play(chord1.bytes)
-    play(chord1.bytes)
-    play(chord1.bytes)
-    play(chord2.bytes)
-    play(chord3.bytes)
-    play(chord3.bytes)
-    play(chord4.bytes)
-    play(chord5.bytes)
-    play(chord5.bytes)
-    play(chord6.bytes)
-    play(chord6.bytes)
-    play(chord7.bytes)
+    tune1 = combine_bytes([chord1.bytes,chord2,bytes])
+    play(tune1)
+    # play(chord1.bytes)
+    # play(chord1.bytes)
+    # play(chord1.bytes)
+    # play(chord2.bytes)
+    # play(chord3.bytes)
+    # play(chord3.bytes)
+    # play(chord4.bytes)
+    # play(chord5.bytes)
+    # play(chord5.bytes)
+    # play(chord6.bytes)
+    # play(chord6.bytes)
+    # play(chord7.bytes)
+
     # play(tone1.bytes)
     # play(tone1.bytes)
     # play(tone1.bytes)
