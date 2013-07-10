@@ -5,6 +5,7 @@ import struct
 from collections import defaultdict
 import time
 
+
 bit = 32
 sample_rate = 20000.0
 wave_peak = (2**bit - 1)/2.0
@@ -18,6 +19,7 @@ def linear_decay(k,time):
 
 def no_decay(k,time):
     return 1
+
 
 class Instrument(object):
     def __init__(self,name,overtone_decay_func_dict,overtone_strengths_dict,overtone_constants_dict):
@@ -44,6 +46,7 @@ class Instrument(object):
         return bytes
 
 
+
 dict1 = {1:0.5, 2: 0.1, 3: 0.1, 4: 0.05, 5: 0.05, 6: 0.01, 7:0.01, 8: 0.01, 9: 0.01}
 dict2 = {1: 0.1, 2: 0.2, 3: 0.3, 4: 0.2, 5: 7.0, 6: 12.0, 7: 12.0, 8:7.0, 9: 8.0}
 dict3 = {}
@@ -60,6 +63,18 @@ for key in dict1.keys():
 
 
 silence = Instrument('silent',dict3,dict4,dict2)
+
+class Line(object):
+    def __init__(self,notes_value_pairs,instrument):
+        '''notes_value_pairs will be a list each element has form [('a',-1),1/4.0]'''
+        self.notes_value_pairs = notes_value_pairs
+        self.instrument = instrument
+
+    def make_tones(self):
+        tones = []
+        for notes_value_pair in notes_value_pairs:
+            tones.append(Tone(notes_value_pair[0],notes_value_pair[1]))
+        return tones
 
 class Chord(object):
     def __init__(self,tones):
@@ -104,28 +119,6 @@ class Tone(object):
         return self.instrument.convert_to_bytes(self.fund_freq,self.duration)
 
 
-def play(list_of_things):
-    bytes = combine_things(list_of_things)
-    p = subprocess.Popen(['sox', '-r', str(sample_rate), '-b', str(bit) , '-c', '1', '-t', 'raw', '-e', 'unsigned-integer', '-', '-d'], stderr=subprocess.PIPE, stdin=subprocess.PIPE)
-    return p.stdin.write(bytes)
-
-def play2(list_of_ints):
-    bytes = convert_to_bytes(list_of_ints)
-    p = subprocess.Popen(['sox', '-r', str(sample_rate), '-b', str(bit) , '-c', '1', '-t', 'raw', '-e', 'unsigned-integer', '-', '-d'], stderr=subprocess.PIPE, stdin=subprocess.PIPE)
-    return p.stdin.write(bytes)
-
-
-def combine_things(list_of_things):
-    """
-    >>> combine_byte([chord1.to_bytes(),chord2.to_bytes])"""
-    return ''.join([thing.convert_to_bytes() for thing in list_of_things])
-
-def combine_things_ints(list_of_things):
-    l = []
-    for thing in list_of_things:
-        l += thing.instrument.combine_waves(thing.fund_freq,thing.duration)
-    return l
-
 class Sine_wave(object):
     def __init__(self,freq,duration,decay_func):
         self.freq = freq
@@ -156,6 +149,8 @@ def build_sine_wave(freq, duration, time_constant=0.0, max_amplitude=wave_peak, 
     return note_string_ints
 
 
+
+
 def convert_to_bytes(note_string_ints):
     l = [struct.pack('I',num) for num in note_string_ints]
     bytes  = ''.join(l)
@@ -165,128 +160,27 @@ def convert_to_bytes(note_string_ints):
 def combine_n_waves(*waves):
     note_string_ints = [sum(tup)/float(len(waves)) for tup in zip(*waves)]
     return note_string_ints
+def play(list_of_things):
+    bytes = combine_things(list_of_things)
+    p = subprocess.Popen(['sox', '-r', str(sample_rate), '-b', str(bit) , '-c', '1', '-t', 'raw', '-e', 'unsigned-integer', '-', '-d'], stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+    return p.stdin.write(bytes)
+
+def play2(list_of_ints):
+    bytes = convert_to_bytes(list_of_ints)
+    p = subprocess.Popen(['sox', '-r', str(sample_rate), '-b', str(bit) , '-c', '1', '-t', 'raw', '-e', 'unsigned-integer', '-', '-d'], stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+    return p.stdin.write(bytes)
 
 
+def combine_things(list_of_things):
+    """
+    >>> combine_byte([chord1.to_bytes(),chord2.to_bytes])"""
+    return ''.join([thing.convert_to_bytes() for thing in list_of_things])
 
-def twinkle_twinkle():
-
-    a = Tone(('a',0),1/4.0)
-    e = Tone(('e',0),1/4.0)
-    fsharp = Tone(('f#',0),1/4.0)
-    d = Tone(('d',0),1/4.0)
-    csharp = Tone(('c#',0),1/4.0)
-    csharp_16th = Tone(('c#',0),1/16.0) 
-    b = Tone(('b',0),3/16.0)
-    a_whole = Tone(('a',0),1.0/2.0)
-    bass_a = Tone(('a',-2),1.0/4.0)
-    middle_a = Tone(('a',-1),1.0/4.0)
-    bass_csharp = Tone(('c#',-1),1/4.0)
-    middle_d = Tone(('d',-1),1/4.0)
-    bass_b = Tone(('b',-1),1/4.0)
-    bass_gsharp = Tone(('g#',-2),1/4.0)
-    bass_fsharp = Tone(('f#',-2),1/4.0)
-    bass_d = Tone(('d',-2),1/4.0)
-    bass_e = Tone(('e',-2),1/4.0)
-    bass_a_whole = Tone(('a',-2),1/2.0)
-    a_16th = Tone(('a',0),1/16.0)
-
-    melody = [a,a,e,e,fsharp,fsharp,e,e,
-              d,d,csharp,csharp,b,a_16th,b,csharp_16th,a_whole]
-    bass = [bass_a,middle_a,bass_csharp,middle_a,middle_d,
-            middle_a,bass_csharp,middle_a,bass_b,bass_gsharp,middle_a,
-            bass_fsharp,bass_d,bass_e,bass_a_whole]
-
-    
-    melody1 = combine_things_ints(melody)
-    
-    bassline = combine_things_ints(bass)
-    chords = combine_n_waves(melody1,bassline)
-
-    # melody_bass = zip(melody,bass)
-
-    # chords = [Chord(item) for item in melody_bass]
-    return chords
-
-def somewhere():
-    one = Tone(('a',-1),1/2.0)
-    two = Tone(('a',-0),1/2.0)
-    three = Tone(('g#',-1),1/4.0)
-    four = Tone(('e',-1),1/8.0)
-    five = Tone(('f#',-1),1/8.0)
-    six = three
-    seven = Tone(('a',-0),1/4.0)
-    eight = Tone(('f#',-2),1/2.0)
-    nine = Tone(('f#',-1),1/2.0)
-    ten = Tone(('e',-1),1.0)
-    offset_bass = Tone(('a',1),2.0,instrument=silence)
-
-    offset = Tone(('a',1),2.0,instrument=silence)
-    one_bass = Tone(('a',0),1/2.0)
-    two_bass = Tone(('a',1),1/2.0)
-    three_bass = Tone(('g#',0),1/4.0)
-    four_bass = Tone(('e',0),1/8.0)
-    five_bass = Tone(('f#',0),1/8.0)
-    six_bass = three_bass
-    seven_bass = Tone(('a',1),1/4.0)
-    eight_bass = Tone(('f#',-1),1/2.0)
-    nine_bass = Tone(('f#',0),1/2.0)
-    ten_bass = Tone(('e',0),1.0)
-    melody_bass = [one,two,three,four,five,six,seven,eight,nine,ten,offset_bass]
-    melody_treble = [offset,one_bass,two_bass,three_bass,four_bass,five_bass,six_bass,seven_bass,eight_bass,nine_bass,ten_bass]
-
-    bassline = combine_things_ints(melody_bass)
-    treble_line = combine_things_ints(melody_treble)
-    chords = combine_n_waves(treble_line,bassline)
-
-    return chords
-
-def bach_herzliebster():
-    a = Tone(('a',0),1/4.0)
-    gsharp = Tone(('g#',-1),1/4.0)
-    e = Tone(('e',-1),1/4.0)
-
-    bass_1 = Tone(('a',-1),1.0/4.0)
-    bass_2 = Tone(('d',-2),1/8.0)
-    bass_3 = Tone(('e',-2),1/8.0)
-    bass_4 = Tone(('f',-2),1/8.0)
-    bass_5 = bass_2
-    bass_6 = Tone(('e',-2),3/8.0)
-    bass_7 = Tone(('d',-2),1/8.0)
-
-    tenor_1 = Tone(('c',-1),1/4.0)
-    tenor_2 = Tone(('d',-1),1/4.0)
-    tenor_3 = tenor_1
-    tenor_4 = Tone(('b',-1),1/8.0)
-    tenor_5 = Tone(('a',-1),1/8.0)
-    tenor_6 = Tone(('g#',-2),1/4.0)
-
-    alto_1 = Tone(('e',-1),1/4.0)
-    alto_2 = Tone(('f',-1),1/4.0)
-    alto_3 = Tone(('f',-1),1/4.0)
-    alto_4 = Tone(('e',-1),1/4.0)
-    alto_5 = Tone(('b',-1),1/4.0)
-
-
-    soprano = [a,a,a,gsharp,e]
-
-    alto = [alto_1,alto_2,alto_3,alto_4,alto_5]
-
-    tenor = [tenor_1,tenor_2,tenor_3,tenor_4,tenor_5,tenor_6]
-
-    bass = [bass_1,bass_2,bass_3,bass_4,bass_5,bass_6,bass_7]
-
-    sop_line = combine_things_ints(soprano)
-    alto_line = combine_things_ints(alto)
-    tenor_line = combine_things_ints(tenor)
-    bassline = combine_things_ints(bass)
-    chords = combine_n_waves(sop_line,alto_line,tenor_line,bassline)
-    return chords
-
-
-
-
-
-
+def combine_things_ints(list_of_things):
+    l = []
+    for thing in list_of_things:
+        l += thing.instrument.combine_waves(thing.fund_freq,thing.duration)
+    return l
 
 
 if __name__ == '__main__':
