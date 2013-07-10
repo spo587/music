@@ -8,12 +8,12 @@ import time
 bit = 32
 sample_rate = 10000.0
 wave_peak = (2**bit - 1)/2.0
-tempo = 60
+tempo = 160
 
 class Chord(object):
     def __init__(self,tones):
         self.tones = tones
-        self.bytes = self.make_bytes()
+        #self.bytes = self.make_bytes()
 
     def combine_tones(self):
         waves = [tone.combine_waves() for tone in self.tones]
@@ -41,7 +41,6 @@ class Tone(object):
         self.overtone_strengths_dict = overtone_strengths_dict
         self.overtone_constants_dict = overtone_constants_dict 
         self.overtone_decay_func_dict = overtone_decay_func_dict
-        self.bytes = self.make_waves_into_bytes()
 
     def parse_duration(self):
         duration = self.note_value*4*60/float(tempo)
@@ -69,17 +68,22 @@ class Tone(object):
         return bytes
 
 
-def play(bytes):
+
+
+def play(list_of_chords):
+    bytes = combine_chords(list_of_chords)
     p = subprocess.Popen(['sox', '-r', str(sample_rate), '-b', str(bit) , '-c', '1', '-t', 'raw', '-e', 'unsigned-integer', '-', '-d'], stderr=subprocess.PIPE, stdin=subprocess.PIPE)
     return p.stdin.write(bytes)
 
 
-def combine_bytes(list_of_bytes):
+
+
+def combine_chords(list_of_chords):
     """
     Retsdfa
 
     >>> combine_byte([chord1.to_bytes(),chord2.to_bytes])"""
-    return ''.join(list_of_bytes)
+    return ''.join([chord.make_bytes() for chord in list_of_chords])
 
 
 
@@ -187,45 +191,74 @@ def test():
         dict3[i] = linear_decay
     for i in range(5,14):
         dict3[i] = exponential_decay
-    tone_a_quarter = Tone(('a',-1),1/4.0,dict1,dict2, dict3)
+    tone_a_quarter = Tone(('a',0),1/4.0,dict1,dict2, dict3)
 
-    tone_e_quarter = Tone(('e',-2),1/4.0,dict1,dict2,dict3)
+    tone_e_quarter = Tone(('e',0),1/4.0,dict1,dict2,dict3)
 
-    # tone_fsharp_quarter = Tone(('f#',-2),1/4.0,dict1,dict2,dict3)
+    tone_fsharp_quarter = Tone(('f#',0),1/4.0,dict1,dict2,dict3)
 
-    # tone_e_half = Tone(('e',-2),1/2.0,dict1,dict2,dict3)
+    tone_d_quarter = Tone(('d',0),1/4.0,dict1,dict2,dict3)
 
-    # tone_csharp_quarter = Tone(('c#',-1),1/4.0,dict1,dict2,dict3)
+    tone_csharp_quarter = Tone(('c#',0),1/4.0,dict1,dict2,dict3)
 
-    # tone_b_quarter = Tone(('b',-1),1/4.0,dict1,dict2,dict3)
+    tone_b_quarter = Tone(('b',0),1/4.0,dict1,dict2,dict3)
 
-    # tone_a_whole = Tone(('a',-1),1.0,dict1,dict2, dict3)
+    tone_a_whole = Tone(('a',0),1.0/2.0,dict1,dict2, dict3)
 
     tone_bass_a_quarter = Tone(('a',-2),1.0,dict1,dict2, dict3)
 
-    tone_bass_csharp_qarter = Tone(('c#',-2),1/4.0,dict1,dict2,dict3)
+    tone_middle_a_quarter = Tone(('a',-1),1.0,dict1,dict2, dict3)
 
-    #tone_bass_d_quarter = Tone(('d',-2),1/4.0,dict1,dict2,dict3)
 
-    tone_bass_csharp_half = Tone(('c#',-2),1/2.0,dict1,dict2,dict3)
+    tone_bass_csharp_qarter = Tone(('c#',-1),1/4.0,dict1,dict2,dict3)
 
-    #tone_bass_a_whole = Tone(('a',-2),1/1.0,dict1,dict2, dict3)
+    tone_middle_d_quarter = Tone(('d',-1),1/4.0,dict1,dict2,dict3)
+
+    tone_bass_b_quarter = Tone(('b',-1),1/4.0,dict1,dict2,dict3)
+
+    tone_bass_gsharp_quarter = Tone(('g#',-2),1/4.0,dict1,dict2,dict3)
+
+    tone_bass_fsharp_quarter = Tone(('f#',-2),1/4.0,dict1,dict2,dict3)
+
+    tone_bass_d_quarter = Tone(('d',-2),1/4.0,dict1,dict2,dict3)
+
+    tone_bass_e_quarter = Tone(('e',-2),1/4.0,dict1,dict2,dict3)
+
+    tone_bass_a_whole = Tone(('a',-2),1/2.0,dict1,dict2, dict3)
 
     chord1 = Chord([tone_a_quarter,tone_bass_a_quarter])
 
-    chord2 = Chord([tone_bass_csharp_qarter,tone_e_quarter])
+    chord2 = Chord([tone_a_quarter,tone_middle_a_quarter])
 
-    # chord3 = Chord([tone_bass_d_quarter,tone_fsharp_quarter])
+    chord3 = Chord([tone_bass_csharp_qarter,tone_e_quarter])
 
-    # chord4 = Chord([tone_e_half,tone_bass_csharp_half])
+    chord4 = Chord([tone_middle_a_quarter,tone_e_quarter])
 
-    # chord5 = Chord([tone_csharp_quarter,tone_e_quarter])
+    chord5 = Chord([tone_middle_d_quarter,tone_fsharp_quarter])
 
-    # chord6 = Chord([tone_b_quarter,tone_e_quarter])
+    chord6 = Chord([tone_middle_a_quarter,tone_fsharp_quarter])
 
-    #chord7 = Chord([tone_bass_a_whole,tone_a_whole])
-    tempo = 100
-    tune1 = combine_bytes([chord1.bytes,chord2.bytes])
+    chord7 = chord3
+
+    chord8 = chord4
+
+    chord9 = Chord([tone_bass_b_quarter,tone_d_quarter])
+
+    chord10 = Chord([tone_bass_gsharp_quarter,tone_d_quarter])
+
+    chord11 = Chord([tone_middle_a_quarter,tone_csharp_quarter])
+
+    chord12 = Chord([tone_bass_fsharp_quarter,tone_csharp_quarter])
+
+    chord13 = Chord([tone_bass_d_quarter,tone_b_quarter])
+    chord14 = Chord([tone_bass_e_quarter,tone_b_quarter])
+
+    chord15 = Chord([tone_bass_a_whole,tone_a_whole])
+
+
+    tune1 = [chord1,chord2,chord3,chord4,chord5,
+            chord6,chord7,chord8,chord9,chord10,
+            chord11,chord12,chord13,chord14,chord15]
     return tune1
 
 
