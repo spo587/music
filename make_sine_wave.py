@@ -72,7 +72,7 @@ class Line(object):
 
     def make_tones(self):
         tones = []
-        for notes_value_pair in notes_value_pairs:
+        for notes_value_pair in self.notes_value_pairs:
             tones.append(Tone(notes_value_pair[0],notes_value_pair[1]))
         return tones
 
