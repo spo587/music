@@ -36,11 +36,11 @@ class Instrument(object):
 
     def combine_waves(self,fund_freq,duration):
         waves = self.build_sine_waves(fund_freq,duration)
-        return combine_n_sine_waves(*waves)
+        return combine_n_waves(*waves)
 
     def convert_to_bytes(self,fund_freq,duration):
         note_string_ints = self.combine_waves(fund_freq,duration)
-        bytes = make_bytes_wave(note_string_ints)
+        bytes = convert_to_bytes(note_string_ints)
         return bytes
 
 
@@ -54,6 +54,13 @@ for i in range(5,14):
 
 crappy_instrument = Instrument('crappy',dict3,dict1,dict2)
 
+dict4 = {}
+for key in dict1.keys():
+    dict4[key]=0
+
+
+silence = Instrument('silent',dict3,dict4,dict2)
+
 class Chord(object):
     def __init__(self,tones):
         self.tones = tones
@@ -61,7 +68,7 @@ class Chord(object):
 
     def combine_tones(self):
         waves = [tone.instrument.combine_waves(tone.fund_freq,tone.duration) for tone in self.tones]
-        return combine_n_sine_waves(*waves)
+        return combine_n_waves(*waves)
     
     def convert_to_bytes(self):
         note_string_ints = self.combine_tones()
@@ -94,19 +101,30 @@ class Tone(object):
         fund_freq = 440*2**(float(half_steps_above_440)/12)
         return fund_freq
     def convert_to_bytes(self):
-        instrument.convert_to_bytes(self.fund_freq,self.duration)
+        return self.instrument.convert_to_bytes(self.fund_freq,self.duration)
 
 
-def play(list_of_chords):
-    bytes = combine_chords(list_of_chords)
+def play(list_of_things):
+    bytes = combine_things(list_of_things)
+    p = subprocess.Popen(['sox', '-r', str(sample_rate), '-b', str(bit) , '-c', '1', '-t', 'raw', '-e', 'unsigned-integer', '-', '-d'], stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+    return p.stdin.write(bytes)
+
+def play2(list_of_ints):
+    bytes = convert_to_bytes(list_of_ints)
     p = subprocess.Popen(['sox', '-r', str(sample_rate), '-b', str(bit) , '-c', '1', '-t', 'raw', '-e', 'unsigned-integer', '-', '-d'], stderr=subprocess.PIPE, stdin=subprocess.PIPE)
     return p.stdin.write(bytes)
 
 
-def combine_chords(list_of_things):
+def combine_things(list_of_things):
     """
     >>> combine_byte([chord1.to_bytes(),chord2.to_bytes])"""
     return ''.join([thing.convert_to_bytes() for thing in list_of_things])
+
+def combine_things_ints(list_of_things):
+    l = []
+    for thing in list_of_things:
+        l += thing.instrument.combine_waves(thing.fund_freq,thing.duration)
+    return l
 
 class Sine_wave(object):
     def __init__(self,freq,duration,decay_func):
@@ -144,7 +162,7 @@ def convert_to_bytes(note_string_ints):
     return bytes
 
 
-def combine_n_sine_waves(*waves):
+def combine_n_waves(*waves):
     note_string_ints = [sum(tup)/float(len(waves)) for tup in zip(*waves)]
     return note_string_ints
 
@@ -159,8 +177,8 @@ def twinkle_twinkle():
     csharp = Tone(('c#',0),1/4.0)
     b = Tone(('b',0),1/4.0)
     a_whole = Tone(('a',0),1.0/2.0)
-    bass_a = Tone(('a',-2),1.0)
-    middle_a = Tone(('a',-1),1.0)
+    bass_a = Tone(('a',-2),1.0/2.0)
+    middle_a = Tone(('a',-1),1.0/4.0)
     bass_csharp = Tone(('c#',-1),1/4.0)
     middle_d = Tone(('d',-1),1/4.0)
     bass_b = Tone(('b',-1),1/4.0)
@@ -172,23 +190,64 @@ def twinkle_twinkle():
 
     melody = [a,a,e,e,fsharp,fsharp,e,e,
               d,d,csharp,csharp,b,b,a_whole]
-    bass = [bass_a,middle_a,bass_csharp,middle_a,middle_d,
+    bass = [bass_a,bass_csharp,middle_a,middle_d,
             middle_a,bass_csharp,middle_a,bass_b,bass_gsharp,middle_a,
             bass_fsharp,bass_d,bass_e,bass_a_whole]
 
-    melody_bass = zip(melody,bass)
+    
+    melody1 = combine_things_ints(melody)
+    
+    bassline = combine_things_ints(bass)
+    chords = combine_n_waves(melody1,bassline)
 
-    chords = [Chord(item) for item in melody_bass]
+    # melody_bass = zip(melody,bass)
+
+    # chords = [Chord(item) for item in melody_bass]
     return chords
+
+def somewhere():
+    one = Tone(('a',-1),1/2.0)
+    two = Tone(('a',-0),1/2.0)
+    three = Tone(('g#',-1),1/4.0)
+    four = Tone(('e',-1),1/8.0)
+    five = Tone(('f#',-1),1/8.0)
+    six = three
+    seven = Tone(('a',-0),1/4.0)
+    eight = Tone(('f#',-2),1/2.0)
+    nine = Tone(('f#',-1),1/2.0)
+    ten = Tone(('e',-1),1.0)
+    offset_bass = Tone(('a',1),2.0,instrument=silence)
+
+    offset = Tone(('a',1),2.0,instrument=silence)
+    one_bass = Tone(('a',0),1/2.0)
+    two_bass = Tone(('a',1),1/2.0)
+    three_bass = Tone(('g#',0),1/4.0)
+    four_bass = Tone(('e',0),1/8.0)
+    five_bass = Tone(('f#',0),1/8.0)
+    six_bass = three_bass
+    seven_bass = Tone(('a',1),1/4.0)
+    eight_bass = Tone(('f#',-1),1/2.0)
+    nine_bass = Tone(('f#',0),1/2.0)
+    ten_bass = Tone(('e',0),1.0)
+    melody_bass = [one,two,three,four,five,six,seven,eight,nine,ten,offset_bass]
+    melody_treble = [offset,one_bass,two_bass,three_bass,four_bass,five_bass,six_bass,seven_bass,eight_bass,nine_bass,ten_bass]
+
+    bassline = combine_things_ints(melody_bass)
+    treble_line = combine_things_ints(melody_treble)
+    chords = combine_n_waves(treble_line,bassline)
+
+    return chords
+
+
 
 
 
 if __name__ == '__main__':
     t_0 = time.time()
-    tune1 = twinkle_twinkle()
+    tune1 = somewhere()
     t_1 = time.time()
     print t_1 - t_0
-    play(tune1)
+    play2(tune1)
     
     
 
@@ -226,7 +285,7 @@ if __name__ == '__main__':
     # x = range(len(y))
     # mpl.scatter(x,y)
     # mpl.show()
-    # assert combine_two_sine_waves(build_sine_wave(400,2), build_sine_wave(800,2)) == combine_n_sine_waves(build_sine_wave(400,2),build_sine_wave(800,2))
+    # assert combine_two_sine_waves(build_sine_wave(400,2), build_sine_wave(800,2)) == combine_n_waves(build_sine_wave(400,2),build_sine_wave(800,2))
     
     # p = subprocess.Popen(['sox', '-r', str(sample_rate), '-b', str(bit) , '-c', '1', '-t', 'raw', '-e', 'unsigned-integer', '-', '-d'], stdin=subprocess.PIPE)
 
