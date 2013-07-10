@@ -63,7 +63,7 @@ note1 = Note(('b#',0),1/2.0)
 note2 = Note(('b',0),1/2.0)
  
 if __name__ == '__main__':
-    tempo = 150 #quarter note beats per minute
+    tempo = 60 #quarter note beats per minute
     ode_firstphrase.play()
     note1.play_note()
     assert False

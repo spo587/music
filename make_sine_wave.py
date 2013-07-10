@@ -8,7 +8,7 @@ import time
 bit = 32
 sample_rate = 20000.0
 wave_peak = (2**bit - 1)/2.0
-tempo = 160
+tempo = 80
 
 def exponential_decay(k,time):
     return math.exp(-k*time)
@@ -175,9 +175,10 @@ def twinkle_twinkle():
     fsharp = Tone(('f#',0),1/4.0)
     d = Tone(('d',0),1/4.0)
     csharp = Tone(('c#',0),1/4.0)
-    b = Tone(('b',0),1/4.0)
+    csharp_16th = Tone(('c#',0),1/16.0) 
+    b = Tone(('b',0),3/16.0)
     a_whole = Tone(('a',0),1.0/2.0)
-    bass_a = Tone(('a',-2),1.0/2.0)
+    bass_a = Tone(('a',-2),1.0/4.0)
     middle_a = Tone(('a',-1),1.0/4.0)
     bass_csharp = Tone(('c#',-1),1/4.0)
     middle_d = Tone(('d',-1),1/4.0)
@@ -187,10 +188,11 @@ def twinkle_twinkle():
     bass_d = Tone(('d',-2),1/4.0)
     bass_e = Tone(('e',-2),1/4.0)
     bass_a_whole = Tone(('a',-2),1/2.0)
+    a_16th = Tone(('a',0),1/16.0)
 
     melody = [a,a,e,e,fsharp,fsharp,e,e,
-              d,d,csharp,csharp,b,b,a_whole]
-    bass = [bass_a,bass_csharp,middle_a,middle_d,
+              d,d,csharp,csharp,b,a_16th,b,csharp_16th,a_whole]
+    bass = [bass_a,middle_a,bass_csharp,middle_a,middle_d,
             middle_a,bass_csharp,middle_a,bass_b,bass_gsharp,middle_a,
             bass_fsharp,bass_d,bass_e,bass_a_whole]
 
@@ -238,13 +240,58 @@ def somewhere():
 
     return chords
 
+def bach_herzliebster():
+    a = Tone(('a',0),1/4.0)
+    gsharp = Tone(('g#',-1),1/4.0)
+    e = Tone(('e',-1),1/4.0)
+
+    bass_1 = Tone(('a',-1),1.0/4.0)
+    bass_2 = Tone(('d',-2),1/8.0)
+    bass_3 = Tone(('e',-2),1/8.0)
+    bass_4 = Tone(('f',-2),1/8.0)
+    bass_5 = bass_2
+    bass_6 = Tone(('e',-2),3/8.0)
+    bass_7 = Tone(('d',-2),1/8.0)
+
+    tenor_1 = Tone(('c',-1),1/4.0)
+    tenor_2 = Tone(('d',-1),1/4.0)
+    tenor_3 = tenor_1
+    tenor_4 = Tone(('b',-1),1/8.0)
+    tenor_5 = Tone(('a',-1),1/8.0)
+    tenor_6 = Tone(('g#',-2),1/4.0)
+
+    alto_1 = Tone(('e',-1),1/4.0)
+    alto_2 = Tone(('f',-1),1/4.0)
+    alto_3 = Tone(('f',-1),1/4.0)
+    alto_4 = Tone(('e',-1),1/4.0)
+    alto_5 = Tone(('b',-1),1/4.0)
+
+
+    soprano = [a,a,a,gsharp,e]
+
+    alto = [alto_1,alto_2,alto_3,alto_4,alto_5]
+
+    tenor = [tenor_1,tenor_2,tenor_3,tenor_4,tenor_5,tenor_6]
+
+    bass = [bass_1,bass_2,bass_3,bass_4,bass_5,bass_6,bass_7]
+
+    sop_line = combine_things_ints(soprano)
+    alto_line = combine_things_ints(alto)
+    tenor_line = combine_things_ints(tenor)
+    bassline = combine_things_ints(bass)
+    chords = combine_n_waves(sop_line,alto_line,tenor_line,bassline)
+    return chords
+
+
+
+
 
 
 
 
 if __name__ == '__main__':
     t_0 = time.time()
-    tune1 = somewhere()
+    tune1 = bach_herzliebster()
     t_1 = time.time()
     print t_1 - t_0
     play2(tune1)
