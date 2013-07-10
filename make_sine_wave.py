@@ -3,9 +3,10 @@ import os
 import math
 import struct
 from collections import defaultdict
+import time
 
 bit = 32
-sample_rate = 50000.0
+sample_rate = 10000.0
 wave_peak = (2**bit - 1)/2.0
 tempo = 60
 
@@ -69,7 +70,7 @@ class Tone(object):
 
 
 def play(bytes):
-    p = subprocess.Popen(['sox', '-r', str(sample_rate), '-b', str(bit) , '-c', '1', '-t', 'raw', '-e', 'unsigned-integer', '-', '-d'], stdin=subprocess.PIPE)
+    p = subprocess.Popen(['sox', '-r', str(sample_rate), '-b', str(bit) , '-c', '1', '-t', 'raw', '-e', 'unsigned-integer', '-', '-d'], stderr=subprocess.PIPE, stdin=subprocess.PIPE)
     return p.stdin.write(bytes)
 
 
@@ -78,7 +79,7 @@ def combine_bytes(list_of_bytes):
     Retsdfa
 
     >>> combine_byte([chord1.to_bytes(),chord2.to_bytes])"""
-    return sum(list_of_bytes,'')
+    return ''.join(list_of_bytes)
 
 
 
@@ -178,10 +179,7 @@ def combine_n_sine_waves(*waves):
 
 # sine1 = Sine_wave(440,4,decay_func_2)
 
-
-
-
-if __name__ == '__main__':
+def test():
     dict1 = {1:0.5, 2: 0.1, 3: 0.1, 4: 0.05, 5: 0.05, 6: 0.3, 7:0.2, 8: 0.1, 9: 0.1, 10: 0.1, 11: 0.1, 12: 0.4, 13: 0.2}
     dict2 = {1: 0.1, 2: 0.2, 3: 0.3, 4: 0.2, 5: 7.0, 6: 12.0, 7: 12.0, 8:15.0, 9: 10.0, 10: 10.0, 11: 7.0, 12: 6.0, 13: 7.0}
     dict3 = {}
@@ -207,11 +205,11 @@ if __name__ == '__main__':
 
     tone_bass_csharp_qarter = Tone(('c#',-2),1/4.0,dict1,dict2,dict3)
 
-    tone_bass_d_quarter = Tone(('d',-2),1/4.0,dict1,dict2,dict3)
+    #tone_bass_d_quarter = Tone(('d',-2),1/4.0,dict1,dict2,dict3)
 
     tone_bass_csharp_half = Tone(('c#',-2),1/2.0,dict1,dict2,dict3)
 
-    tone_bass_a_whole = Tone(('a',-2),1/1.0,dict1,dict2, dict3)
+    #tone_bass_a_whole = Tone(('a',-2),1/1.0,dict1,dict2, dict3)
 
     chord1 = Chord([tone_a_quarter,tone_bass_a_quarter])
 
@@ -225,10 +223,23 @@ if __name__ == '__main__':
 
     # chord6 = Chord([tone_b_quarter,tone_e_quarter])
 
-    chord7 = Chord([tone_bass_a_whole,tone_a_whole])
+    #chord7 = Chord([tone_bass_a_whole,tone_a_whole])
     tempo = 100
-    tune1 = combine_bytes([chord1.bytes,chord2,bytes])
+    tune1 = combine_bytes([chord1.bytes,chord2.bytes])
+    return tune1
+
+
+
+if __name__ == '__main__':
+    t_0 = time.time()
+    tune1 = test()
+    t_1 = time.time()
+    print t_1 - t_0
     play(tune1)
+    
+    
+
+    
     # play(chord1.bytes)
     # play(chord1.bytes)
     # play(chord1.bytes)
