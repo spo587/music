@@ -7,7 +7,9 @@ import time
 
 ## TODO: change tone class inits so that self.name isn't a tuple of length 2, but just split it into two things
 ## then we can make just-tone class a sublass of tone b/c will take same # of arguments in init??
-## TODO: make different instruments
+##  make different instruments
+## make sample_rate an input parameter?
+## VOICING: either between different lines, or notes within a line/within a vertical element/chord?
 bit = 32
 sample_rate = 10000.0
 wave_peak = (2**bit - 1)/2.0
