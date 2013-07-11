@@ -10,10 +10,11 @@ import time
 ##  make different instruments
 ## make sample_rate an input parameter?
 ## VOICING: either between different lines, or notes within a line/within a vertical element/chord?
+## make it so that you can write chords in a single line too
 bit = 32
 sample_rate = 10000.0
 wave_peak = (2**bit - 1)/2.0
-tempo = 180
+tempo = 130
 global_key = 310/4.0 #e-flat
 
 class Instrument(object):
@@ -98,8 +99,8 @@ class Just_tempered_tone(Tone):
         scale_degree_dict[degree+0.5] = scale_degree_dict[degree]*(25/24.0)
     scale_degree_dict['m3'] = 6/5.0
     scale_degree_dict['m7'] = 3/2.0*6/5.0
-    def __init__(self,scale_degree,octaves_above,note_value,instrument):
-        self.key = global_key
+    def __init__(self,scale_degree,octaves_above,note_value,instrument, key=global_key):
+        self.key = key
         self.scale_degree = scale_degree
         self.octaves_above = octaves_above
         self.note_value = note_value
@@ -166,7 +167,16 @@ def combine_n_waves(*waves):
 def play2(list_of_ints):
     bytes = convert_to_bytes(list_of_ints)
     p = subprocess.Popen(['sox', '-r', str(sample_rate), '-b', str(bit) , '-c', '1', '-t', 'raw', '-e', 'unsigned-integer', '-', '-d'], stderr=subprocess.PIPE, stdin=subprocess.PIPE)
-    return p.stdin.write(bytes)
+    p.stdin.write(bytes) 
+
+def write_to_file(list_of_ints,file_name):
+    bytes = convert_to_bytes(list_of_ints)
+    p = subprocess.Popen(['sox', '-r', str(sample_rate), '-b', str(bit) , '-c', '1', '-t', 'raw', '-e', 'unsigned-integer', '-', 'boomtown.raw'], stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+    p.stdin.write(bytes)
+    p.stdin.close()
+    #p.wait()
+    p = subprocess.Popen(['sox', '-r', str(sample_rate), '-b', str(bit) , '-c', '1', '-e', 'unsigned-integer', 'boomtown.raw', file_name+'.wav'], stdin=subprocess.PIPE)
+
 
 def combine_things_ints(list_of_things):
     l = []
@@ -175,18 +185,18 @@ def combine_things_ints(list_of_things):
     return l
 
 
-#class Chord(object):
-#     def __init__(self,tones):
-#         self.tones = tones
-#         #self.bytes = self.make_bytes()
+class Chord(object):
+    def __init__(self,tones):
+        self.tones = tones
+        #self.bytes = self.make_bytes()
 
-#     def combine_tones(self):
-#         waves = [tone.instrument.combine_waves(tone.fund_freq,tone.duration) for tone in self.tones]
-#         return combine_n_waves(*waves)
+    def combine_tones(self):
+        waves = [tone.instrument.combine_waves(tone.fund_freq,tone.duration) for tone in self.tones]
+        return combine_n_waves(*waves)
     
-#     def convert_to_bytes(self):
-#         note_string_ints = self.combine_tones()
-#         return convert_to_bytes(note_string_ints)
+    def convert_to_bytes(self):
+        note_string_ints = self.combine_tones()
+        return convert_to_bytes(note_string_ints)
 
 
 # def combine_things(list_of_things):
