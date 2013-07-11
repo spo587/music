@@ -5,6 +5,9 @@ import struct
 from collections import defaultdict
 import time
 
+## TODO: change tone class inits so that self.name isn't a tuple of length 2, but just split it into two things
+## then we can make just-tone class a sublass of tone b/c will take same # of arguments in init??
+## TODO: make different instruments
 bit = 32
 sample_rate = 10000.0
 wave_peak = (2**bit - 1)/2.0
@@ -47,33 +50,14 @@ class Line(object):
             tones.append(Tone(notes_value_pair[0],notes_value_pair[1],self.instrument))
         return tones
 
-    # def transpose_tones(self,num_halfsteps):
-    #     l = self.make_tones()
-    #     for tone in l:
-    #         tone.fund_freq *= (2**num_halfsteps/12.0)
-    #     return l
-
 class Line_steps(Line):
-    '''for this class, notes_value_pairs has a different form'''
+    '''for this class, notes_value_pairs has a different form, simple, a list of list of ints/floats. each inner
+    list corresponds to one tone'''
     def make_tones(self):
         tones = []
         for notes_value_pair in self.notes_value_pairs:
             tones.append(Just_tempered_tone(notes_value_pair[0],notes_value_pair[1],notes_value_pair[2],self.instrument))
         return tones
-
-
-class Chord(object):
-    def __init__(self,tones):
-        self.tones = tones
-        #self.bytes = self.make_bytes()
-
-    def combine_tones(self):
-        waves = [tone.instrument.combine_waves(tone.fund_freq,tone.duration) for tone in self.tones]
-        return combine_n_waves(*waves)
-    
-    def convert_to_bytes(self):
-        note_string_ints = self.combine_tones()
-        return convert_to_bytes(note_string_ints)
 
 class Tone(object):
     note_dict = {'a':0,'b':2,'c':3,'d':5,'e':7,'f':8,'g':10,'rest':0}
@@ -100,6 +84,7 @@ class Tone(object):
         half_steps_above_440 = Tone.note_dict[self.name[0]]+12*self.name[1]
         fund_freq = 440*2**(float(half_steps_above_440)/12)
         return fund_freq
+
     def convert_to_bytes(self):
         return self.instrument.convert_to_bytes(self.fund_freq,self.duration)
 
@@ -129,7 +114,6 @@ class Just_tempered_tone(object):
 
     def convert_to_bytes(self):
         return self.instrument.convert_to_bytes(self.fund_freq,self.duration)
-
 
 class Sine_wave(object):
     def __init__(self,freq,duration,decay_func):
@@ -192,6 +176,19 @@ def combine_things_ints(list_of_things):
     return l
 
 
+#class Chord(object):
+#     def __init__(self,tones):
+#         self.tones = tones
+#         #self.bytes = self.make_bytes()
+
+#     def combine_tones(self):
+#         waves = [tone.instrument.combine_waves(tone.fund_freq,tone.duration) for tone in self.tones]
+#         return combine_n_waves(*waves)
+    
+#     def convert_to_bytes(self):
+#         note_string_ints = self.combine_tones()
+#         return convert_to_bytes(note_string_ints)
+
 
 # def combine_things(list_of_things):
 #     """
@@ -205,4 +202,9 @@ def combine_things_ints(list_of_things):
 #     return p.stdin.write(bytes)
 
 
+    # def transpose_tones(self,num_halfsteps):
+    #     l = self.make_tones()
+    #     for tone in l:
+    #         tone.fund_freq *= (2**num_halfsteps/12.0)
+    #     return l
 
