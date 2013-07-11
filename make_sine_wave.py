@@ -92,14 +92,14 @@ class Tone(object):
     def convert_to_bytes(self):
         return self.instrument.convert_to_bytes(self.fund_freq,self.duration)
 
-class Just_tempered_tone(object):
+class Just_tempered_tone(Tone):
     scale_degree_dict = {5:1.5,4:4/3.0,3:5/4.0,2:9/8.0,1:1,6:5/3.0,7:3/2.0*(5/4.0)}
     for degree in scale_degree_dict.keys():
         scale_degree_dict[degree+0.5] = scale_degree_dict[degree]*(25/24.0)
     scale_degree_dict['m3'] = 6/5.0
     scale_degree_dict['m7'] = 3/2.0*6/5.0
-    def __init__(self,scale_degree,octaves_above,note_value,instrument,key=global_key):
-        self.key = key
+    def __init__(self,scale_degree,octaves_above,note_value,instrument):
+        self.key = global_key
         self.scale_degree = scale_degree
         self.octaves_above = octaves_above
         self.note_value = note_value
@@ -107,17 +107,12 @@ class Just_tempered_tone(object):
         self.fund_freq = self.parse_freq()
         self.instrument = instrument
 
-    def parse_duration(self):
-        return self.note_value*60/float(tempo)
-
     def parse_freq(self):
         if self.scale_degree == 'rest':
             return 0
         fund_freq = self.key * Just_tempered_tone.scale_degree_dict[self.scale_degree] * (2**self.octaves_above)
         return fund_freq
 
-    def convert_to_bytes(self):
-        return self.instrument.convert_to_bytes(self.fund_freq,self.duration)
 
 class Sine_wave(object):
     def __init__(self,freq,duration,decay_func):
