@@ -61,7 +61,7 @@ def twinkle_twinkle():
     # chords = [Chord(item) for item in melody_bass]
     return chords
 
-def somewhere():
+def somewhere1():
     one = msw.Tone(('a',-1),2.0,crappy_instrument)
     two = msw.Tone(('a',-0),2.0,crappy_instrument)
     three = msw.Tone(('g#',-1),1.0,crappy_instrument)
@@ -139,10 +139,22 @@ def somewhere2():
     chords = msw.combine_n_waves(lines_ready[0],lines_ready[1],lines_ready[2],lines_ready[3])
     return chords
 
+def somewhere3():
+    line1 = msw.Line_steps([[1,2,2.0],[1,3,2.0]],crappy_instrument)
+
+    line2 = msw.Line_steps([[5,1,2.0],[5,2,2.0]],crappy_instrument)
+
+    line3 = msw.Line_steps([[3,1,2.0],['rest',2,2.0]],crappy_instrument)
+
+    lines = [line1,line2,line3]
+    lines_ready = [msw.combine_things_ints(line.make_tones()) for line in lines]
+    chords = msw.combine_n_waves(lines_ready[0],lines_ready[1],lines_ready[2])
+    return chords
+
 if __name__ == '__main__':
     t_0 = time.time()
     #tune1 = bach_herzliebster()
-    tune1 = somewhere2()
+    tune1 = somewhere3()
     t_1 = time.time()
     print t_1 - t_0
     msw.play2(tune1)
