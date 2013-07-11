@@ -42,14 +42,14 @@ class Instrument(object):
 
 class Line(object):
     def __init__(self,notes_value_pairs,instrument):
-        '''notes_value_pairs will be a list each element has form [('a',-1),1/4.0]'''
+        '''notes_value_pairs will be a list each element has form ['a',-1,1/4.0]'''
         self.notes_value_pairs = notes_value_pairs
         self.instrument = instrument
 
     def make_tones(self):
         tones = []
         for notes_value_pair in self.notes_value_pairs:
-            tones.append(Tone(notes_value_pair[0],notes_value_pair[1],self.instrument))
+            tones.append(Tone(notes_value_pair[0],notes_value_pair[1],notes_value_pair[2],self.instrument))
         return tones
 
 class Line_steps(Line):
@@ -66,9 +66,10 @@ class Tone(object):
     for note in note_dict.keys():
         note_dict[note + '#'] = note_dict[note] + 1
         note_dict[note + 'b'] = note_dict[note] - 1
-    def __init__(self, name, note_value, instrument):
+    def __init__(self, name, octave, note_value, instrument):
         ''''''
         self.name = name
+        self.octave = octave
         self.note_value = note_value
         self.fund_freq = self.parse_freq()
         self.duration = self.parse_duration()
@@ -77,13 +78,14 @@ class Tone(object):
         self.overtone_decay_func_dict = instrument.overtone_decay_func_dict
         self.instrument = instrument
 
+
     def parse_duration(self):
         return self.note_value*60/float(tempo)
 
     def parse_freq(self):
         if self.name == 'rest':
             return 0
-        half_steps_above_440 = Tone.note_dict[self.name[0]]+12*self.name[1]
+        half_steps_above_440 = Tone.note_dict[self.name]+12*self.octave
         fund_freq = 440*2**(float(half_steps_above_440)/12)
         return fund_freq
 
