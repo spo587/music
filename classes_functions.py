@@ -13,20 +13,24 @@ import time
 bit = 32
 sample_rate = 10000.0
 wave_peak = (2**bit - 1)/2.0
-tempo = 130
+tempo = 150
 global_key = 310/4.0 #e-flat
 
 class Instrument(object):
-    def __init__(self,name,overtone_decay_func_dict,overtone_strengths_dict,overtone_constants_dict):
+    def __init__(self,name,overtone_decay_func_dict,overtone_strengths_dict,overtone_constants_dict,overtone_onset_dict):
         self.name = name
         self.overtone_decay_func_dict = overtone_decay_func_dict
         self.overtone_constants_dict = overtone_constants_dict
         self.overtone_strengths_dict = overtone_strengths_dict
+        self.overtone_onset_dict = overtone_onset_dict
 
     def build_sine_waves(self,fund_freq,duration):
         waves = []
         for overtone in self.overtone_strengths_dict.keys():
-            wave = build_sine_wave(overtone*fund_freq,duration,self.overtone_constants_dict[overtone],wave_peak*self.overtone_strengths_dict[overtone],self.overtone_decay_func_dict[overtone])
+            try:
+                wave = build_sine_wave(overtone*fund_freq,duration,self.overtone_onset_dict[overtone],self.overtone_constants_dict[overtone],wave_peak*self.overtone_strengths_dict[overtone],self.overtone_decay_func_dict[overtone])
+            except KeyError:
+                print overtone, self.overtone_onset_dict,self.overtone_constants_dict,self.overtone_strengths_dict,self.overtone_decay_func_dict
             waves.append(wave)
         #print len(waves)
         return waves
@@ -122,7 +126,7 @@ class Sine_wave(object):
         self.bytes = self.make_bytes()
 
     def build_wave_amplitude_constant(self):
-        note_string_ints = build_sine_wave(self.freq,self.duration,decay_function=no_decay)
+        note_string_ints = build_sine_wave(self.freq,self.duration,offset_time=0.0, decay_function=no_decay)
         return note_string_ints
 
     def apply_decay_func(self):
@@ -144,14 +148,28 @@ def linear_decay(k,time):
 def no_decay(k,time):
     return 1
 
-def build_sine_wave(freq, duration, time_constant=0.0, max_amplitude=wave_peak, decay_function=exponential_decay):
+def immediate(time,offset_time):
+    return 1
+
+def linear_onset(time,offset_time):
+    return time/float(offset_time)
+    
+
+
+def build_sine_wave(freq, duration, offset_time=0.01,time_constant=0.0, max_amplitude=wave_peak, decay_function=exponential_decay,onset_function=linear_onset):
     note_string_ints = []
     if freq == 0:
         return [0 for i in range(int(round(sample_rate*duration)))]
-    for i in range(0,int(duration*freq*sample_rate/freq)):
-        offset = (2**bit - 1)/2.0
+    max_time = int(round(offset_time * sample_rate))
+    shift = (2**bit - 1)/2.0
+    for i in range(0, max_time): 
         phase = math.pi*2*i*freq/sample_rate
-        note_string_ints.append(int(round(max_amplitude*decay_function(time_constant,i/sample_rate)*math.sin(phase)+offset)))
+        note_string_ints.append(int(round(max_amplitude*onset_function(i/max_time)*math.sin(phase)+shift)))
+
+    for i in range(max_time,int(duration*sample_rate)):
+        
+        phase = math.pi*2*i*freq/sample_rate
+        note_string_ints.append(int(round(max_amplitude*decay_function(time_constant,(i-max_time)/sample_rate)*math.sin(phase)+shift)))
     return note_string_ints
 
 def convert_to_bytes(note_string_ints):

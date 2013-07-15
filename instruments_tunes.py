@@ -1,12 +1,13 @@
 import subprocess
 import classes_functions as msw 
 import time
+from collections import defaultdict
 
 
 
 
-def make_instrument(name,dict1,dict2,dict3):
-    return msw.Instrument(name,dict3,dict1,dict2)
+def make_instrument(name,dict1,dict2,dict3,dict4):
+    return msw.Instrument(name,dict3,dict1,dict2,dict4)
 
 def make_crappy_instrument():
 
@@ -17,27 +18,33 @@ def make_crappy_instrument():
         dict3[i] = msw.linear_decay
     for i in range(5,14):
         dict3[i] = msw.exponential_decay
-    return dict1,dict2,dict3
+    dict4 = {}
+    for i in range(1,10):
+        dict4[i] = 0.0
+    return dict1,dict2,dict3,dict4
 
-dict1,dict2,dict3 = make_crappy_instrument()
+dict1,dict2,dict3,dict4 = make_crappy_instrument()
 
 
-crappy_instrument = make_instrument('crappy',dict1,dict2,dict3)
+crappy_instrument = make_instrument('crappy',dict1,dict2,dict3,dict4)
 
 
 def make_second_instrument():
-    dict4 = {1:0.7,2:0.5,3:0.3,4:0.2}
-    dict5 = {1:0.4,2:0.5,3:6.0,4:7.0}
-    dict6 = {}
+    dict5 = {1:0.7,2:0.5,3:0.3,4:0.2}
+    dict6 = {1:0.4,2:0.5,3:6.0,4:7.0}
+    dict7 = {}
     for i in range(1,3):
-        dict6[i] = msw.linear_decay
-    dict6[3] = msw.exponential_decay
-    dict6[4] = msw.exponential_decay
-    return dict4,dict5,dict6
+        dict7[i] = msw.linear_decay
+    dict7[3] = msw.exponential_decay
+    dict7[4] = msw.exponential_decay
+    dict8 = {}
+    for i in range(1,5):
+        dict8[i] = 0.0
+    return dict5,dict6,dict7,dict8
 
-dict4,dict5,dict6 = make_second_instrument()
+dict5,dict6,dict7,dict8 = make_second_instrument()
 
-second_instrument = make_instrument('second',dict4,dict5,dict6)
+second_instrument = make_instrument('second',dict5,dict6,dict7,dict8)
 
  
 def twinkle_twinkle():
