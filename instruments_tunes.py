@@ -1,33 +1,44 @@
 import subprocess
-import make_sine_wave as msw 
+import classes_functions as msw 
 import time
 
 
 
 
-dict1 = {1:0.5, 2: 0.1, 3: 0.1, 4: 0.05, 5: 0.05, 6: 0.01, 7:0.01, 8: 0.01, 9: 0.01}
-dict2 = {1: 0.1, 2: 0.2, 3: 0.3, 4: 0.2, 5: 7.0, 6: 12.0, 7: 12.0, 8:7.0, 9: 8.0}
-dict3 = {}
-for i in range(1,5):
-    dict3[i] = msw.linear_decay
-for i in range(5,14):
-    dict3[i] = msw.exponential_decay
+def make_instrument(name,dict1,dict2,dict3):
+    return msw.Instrument(name,dict3,dict1,dict2)
 
-# dict4 = {1:0.7,}
-# dict5 = 
-# dict6 = 
+def make_crappy_instrument():
 
+    dict1 = {1:0.5, 2: 0.1, 3: 0.1, 4: 0.05, 5: 0.05, 6: 0.01, 7:0.01, 8: 0.01, 9: 0.01}
+    dict2 = {1: 0.1, 2: 0.2, 3: 0.3, 4: 0.2, 5: 7.0, 6: 12.0, 7: 12.0, 8:7.0, 9: 8.0}
+    dict3 = {}
+    for i in range(1,5):
+        dict3[i] = msw.linear_decay
+    for i in range(5,14):
+        dict3[i] = msw.exponential_decay
+    return dict1,dict2,dict3
 
-crappy_instrument = msw.Instrument('crappy',dict3,dict1,dict2)
-
-# second_instrument = msw.Instrument()
-
-dict4 = {}
-for key in dict1.keys():
-    dict4[key]=0
+dict1,dict2,dict3 = make_crappy_instrument()
 
 
-silence = msw.Instrument('silent',dict3,dict4,dict2)
+crappy_instrument = make_instrument('crappy',dict1,dict2,dict3)
+
+
+def make_second_instrument():
+    dict4 = {1:0.7,2:0.5,3:0.3,4:0.2}
+    dict5 = {1:0.4,2:0.5,3:6.0,4:7.0}
+    dict6 = {}
+    for i in range(1,3):
+        dict6[i] = msw.linear_decay
+    dict6[3] = msw.exponential_decay
+    dict6[4] = msw.exponential_decay
+    return dict4,dict5,dict6
+
+dict4,dict5,dict6 = make_second_instrument()
+
+second_instrument = make_instrument('second',dict4,dict5,dict6)
+
  
 def twinkle_twinkle():
 
@@ -113,13 +124,13 @@ def somewhere2():
                     ['d',-1,1.0],['eb',-1,4.0]],crappy_instrument)
     line3 = msw.Line([['g',-2,2.0],['g',-1,2.0],['rest',None,4.0],['c',-1,1.0],['ab',-1,0.5],['bb',-1,0.5],
                     ['c',-1,1.0],['d',-1,1.0],['eb',-1,4.0],['rest',None,6.0],['bb',-1,2.0],['c',-1,3.0],
-                    ['bb',-1,1.0],['g',-2,4.0]],crappy_instrument)
+                    ['bb',-1,1.0],['g',-2,4.0]],second_instrument)
 
     line4 = msw.Line([['rest',None, 4.0],['bb',-2,2.0],['bb',-1,2.0],['rest',None,1.0],['ab',-1,3.0],
                     ['g',-2,1.0],['eb',-2,0.5],['f',-2,0.5],['g',-2,1.0],['ab',-1,1/2.0],['bb',-1,0.5],
                     ['ab',-1,2.0],['f',-3,2.0],['g',-3,1.0],['f',-2,1.0],['e',-2,1.0],
                     ['f',-2,0.5],['g',-2,0.5],['ab',-1,1.5],['g',-2,0.5],['ab',-1,0.5],
-                    ['a',-1,0.5],['bb',-1,1.0],['eb',-2,4.0]],crappy_instrument)
+                    ['a',-1,0.5],['bb',-1,1.0],['eb',-2,4.0]],second_instrument)
 
     lines = [line1,line2,line3,line4]
 
