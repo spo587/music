@@ -11,9 +11,9 @@ import time
 ## VOICING: either between different lines, or notes within a line/within a vertical element/chord?
 ## make it so that you can write chords in a single line too
 bit = 32
-sample_rate = 10000.0
+sample_rate = 5000.0
 wave_peak = (2**bit - 1)/2.0
-tempo = 150
+tempo = 180
 global_key = 310/4.0 #e-flat
 
 class Instrument(object):
@@ -27,10 +27,7 @@ class Instrument(object):
     def build_sine_waves(self,fund_freq,duration):
         waves = []
         for overtone in self.overtone_strengths_dict.keys():
-            try:
-                wave = build_sine_wave(overtone*fund_freq,duration,self.overtone_onset_dict[overtone],self.overtone_constants_dict[overtone],wave_peak*self.overtone_strengths_dict[overtone],self.overtone_decay_func_dict[overtone])
-            except KeyError:
-                print overtone, self.overtone_onset_dict,self.overtone_constants_dict,self.overtone_strengths_dict,self.overtone_decay_func_dict
+            wave = build_sine_wave(overtone*fund_freq,duration,self.overtone_onset_dict[overtone],self.overtone_constants_dict[overtone],wave_peak*self.overtone_strengths_dict[overtone],self.overtone_decay_func_dict[overtone])
             waves.append(wave)
         #print len(waves)
         return waves
@@ -114,7 +111,11 @@ class Just_tempered_tone(Tone):
     def parse_freq(self):
         if self.scale_degree == 'rest':
             return 0
+        
+        #try:
         fund_freq = self.key * Just_tempered_tone.scale_degree_dict[self.scale_degree] * (2**self.octaves_above)
+        #except KeyError:
+         #   print self.scale_degree,Just_tempered_tone.scale_degree_dict
         return fund_freq
 
 
@@ -164,12 +165,16 @@ def build_sine_wave(freq, duration, offset_time=0.01,time_constant=0.0, max_ampl
     shift = (2**bit - 1)/2.0
     for i in range(0, max_time): 
         phase = math.pi*2*i*freq/sample_rate
-        note_string_ints.append(int(round(max_amplitude*onset_function(i/max_time)*math.sin(phase)+shift)))
+        note_string_ints.append(int(round(max_amplitude*onset_function(i,max_time)*math.sin(phase)+shift)))
 
     for i in range(max_time,int(duration*sample_rate)):
         
         phase = math.pi*2*i*freq/sample_rate
-        note_string_ints.append(int(round(max_amplitude*decay_function(time_constant,(i-max_time)/sample_rate)*math.sin(phase)+shift)))
+        to_append = int(round(max_amplitude*decay_function(time_constant,(i-max_time)/sample_rate)*math.sin(phase)+shift))
+        if decay_function(time_constant,(i-max_time)/sample_rate) < 0:
+            note_string_ints.append(0)
+        else:
+            note_string_ints.append(int(round(max_amplitude*decay_function(time_constant,(i-max_time)/sample_rate)*math.sin(phase)+shift)))
     return note_string_ints
 
 def convert_to_bytes(note_string_ints):
@@ -216,6 +221,12 @@ class Chord(object):
         return convert_to_bytes(note_string_ints)
 
 
+if __name__ == '__main__':
+    l1 = build_sine_wave(440,1.5,time_constant=1.0,decay_function=linear_decay)
+    l2 = [item for item in l1 if item > 4294967295]
+    print l2
+    play2(l1)
+    
 # def combine_things(list_of_things):
 #     """
 #     >>> combine_byte([chord1.to_bytes(),chord2.to_bytes])"""

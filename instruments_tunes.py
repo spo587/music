@@ -20,7 +20,7 @@ def make_crappy_instrument():
         dict3[i] = msw.exponential_decay
     dict4 = {}
     for i in range(1,10):
-        dict4[i] = 0.0
+        dict4[i] = 0.05
     return dict1,dict2,dict3,dict4
 
 dict1,dict2,dict3,dict4 = make_crappy_instrument()
