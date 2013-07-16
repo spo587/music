@@ -20,7 +20,7 @@ def make_crappy_instrument():
         dict3[i] = msw.exponential_decay
     dict4 = {}
     for i in range(1,10):
-        dict4[i] = 0.05
+        dict4[i] = 0.01
     return dict1,dict2,dict3,dict4
 
 dict1,dict2,dict3,dict4 = make_crappy_instrument()
@@ -31,12 +31,12 @@ crappy_instrument = make_instrument('crappy',dict1,dict2,dict3,dict4)
 
 def make_second_instrument():
     dict5 = {1:0.7,2:0.5,3:0.3,4:0.2}
-    dict6 = {1:0.4,2:0.5,3:6.0,4:7.0}
+    dict6 = {1:1.2,2:1.5,3:1.0,4:1.0}
     dict7 = {}
-    for i in range(1,3):
+    for i in range(1,5):
         dict7[i] = msw.linear_decay
-    dict7[3] = msw.exponential_decay
-    dict7[4] = msw.exponential_decay
+    # dict7[3] = msw.exponential_decay
+    # dict7[4] = msw.exponential_decay
     dict8 = {}
     for i in range(1,5):
         dict8[i] = 0.0
@@ -148,24 +148,38 @@ def somewhere2():
 
 def somewhere3():
     line1 = msw.Line_steps([[1,2,2.0],[1,3,2.0]],crappy_instrument)
+    print line1.notes_value_pairs
 
     line2 = msw.Line_steps([[5,1,2.0],[5,2,2.0]],crappy_instrument)
 
     line3 = msw.Line_steps([[3,1,2.0],['rest',2,2.0]],crappy_instrument)
 
-    lines = [line1,line2,line3]
+    lines = [line1]#, line2,line3]
     lines_ready = [msw.combine_things_ints(line.make_tones()) for line in lines]
-    chords = msw.combine_n_waves(lines_ready[0],lines_ready[1],lines_ready[2])
+    chords = msw.combine_n_waves(lines_ready[0])#,lines_ready[1],lines_ready[2])
     return chords
 
+def input_tune_quarter_notes():
+    instrument = crappy_instrument
+    steps = (raw_input('input the scale degrees in a list'))
+    list_notes = [[int(step),2,1.0] for step in steps]
+    line1 = msw.Line_steps(list_notes,instrument)
+    print line1.notes_value_pairs
+    lines_ready = [msw.combine_things_ints(line1.make_tones())]
+    chords = msw.combine_n_waves(lines_ready[0])
+    return chords
+
+
 if __name__ == '__main__':
-    t_0 = time.time()
-    #tune1 = bach_herzliebster()
+    # t_0 = time.time()
+    # #tune1 = bach_herzliebster()
     tune1 = somewhere2()
-    t_1 = time.time()
-    print t_1 - t_0
+    # t_1 = time.time()
+    # print t_1 - t_0
     #msw.write_to_file(tune1,'ohshit')
     msw.play2(tune1)
+    #tune1 = input_tune_quarter_notes()
+    #msw.play2(tune1)
     
 
 
